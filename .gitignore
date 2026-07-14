@@ -36,6 +36,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Project planning docs
+/api.md
+
 app-example
 
 # generated native folders
