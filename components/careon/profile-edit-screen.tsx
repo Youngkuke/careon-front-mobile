@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { KeyboardTypeOptions, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { goBackOrReplace } from '@/lib/navigation';
+import { replaceRoute } from '@/lib/navigation';
 
 import { CareButton, Header, Screen } from './shared';
 
@@ -21,10 +21,11 @@ export function ProfileTextEditScreen({
   secureTextEntry,
 }: ProfileTextEditScreenProps) {
   const [value, setValue] = useState(initialValue);
+  const returnToMyPage = () => replaceRoute('/mypage');
 
   return (
     <Screen contentStyle={styles.content}>
-      <Header onBack={() => goBackOrReplace('/mypage')} title={title} />
+      <Header onBack={returnToMyPage} title={title} />
 
       <View style={styles.inputRow}>
         <TextInput
@@ -45,7 +46,7 @@ export function ProfileTextEditScreen({
         ) : null}
       </View>
 
-      <CareButton onPress={() => goBackOrReplace('/mypage')} style={styles.saveButton}>
+      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
         저장
       </CareButton>
     </Screen>
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: 25,
     marginTop: 86,
-    paddingHorizontal: 26,
+    paddingHorizontal: 18,
   },
   input: {
     color: CAREON_COLORS.title,
@@ -81,6 +82,7 @@ const styles = StyleSheet.create({
   saveButton: {
     alignSelf: 'center',
     marginTop: 47,
-    width: 312,
+    maxWidth: 312,
+    width: '82%',
   },
 });

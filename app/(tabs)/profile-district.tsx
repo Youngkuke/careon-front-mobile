@@ -5,14 +5,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CareButton, Header, Screen } from '@/components/careon/shared';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { MOCK_USER, SEOUL_DISTRICTS } from '@/lib/mock-data';
-import { goBackOrReplace } from '@/lib/navigation';
+import { replaceRoute } from '@/lib/navigation';
 
 export default function ProfileDistrictScreen() {
   const [district, setDistrict] = useState(MOCK_USER.district);
+  const returnToMyPage = () => replaceRoute('/mypage');
 
   return (
     <Screen scroll contentStyle={styles.content}>
-      <Header onBack={() => goBackOrReplace('/mypage')} title="거주지" />
+      <Header onBack={returnToMyPage} title="거주지" />
 
       <View style={styles.grid}>
         {SEOUL_DISTRICTS.map((item) => {
@@ -34,7 +35,7 @@ export default function ProfileDistrictScreen() {
         })}
       </View>
 
-      <CareButton onPress={() => goBackOrReplace('/mypage')} style={styles.saveButton}>
+      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
         저장
       </CareButton>
     </Screen>
@@ -78,6 +79,7 @@ const styles = StyleSheet.create({
   saveButton: {
     alignSelf: 'center',
     marginTop: 42,
-    width: 312,
+    maxWidth: 312,
+    width: '82%',
   },
 });

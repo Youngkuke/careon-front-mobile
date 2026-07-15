@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useRef, useState } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import {
+  Animated,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
-  SafeAreaView,
-  ScrollView,
+  type ScrollViewProps,
   StyleProp,
   StyleSheet,
   Text,
@@ -13,32 +16,202 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { CAREON_COLORS, CAREON_SHADOW } from '@/lib/careon-theme';
 
 type ScreenProps = PropsWithChildren<{
   backgroundColor?: string;
   contentStyle?: StyleProp<ViewStyle>;
+  edges?: Edge[];
   scroll?: boolean;
 }>;
 
-export function Screen({ children, backgroundColor = CAREON_COLORS.background, contentStyle, scroll }: ScreenProps) {
+const DEFAULT_SCREEN_EDGES: Edge[] = ['top', 'right', 'left'];
+
+type CareScrollViewProps = ScrollViewProps & {
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  showCareScrollbar?: boolean;
+};
+
+type CareEntranceProps = PropsWithChildren<{
+  delay?: number;
+  distance?: number;
+  style?: StyleProp<ViewStyle>;
+}>;
+
+export function CareEntrance({
+  children,
+  delay = 0,
+  distance = 12,
+  style,
+}: CareEntranceProps) {
+  const progress = useRef(new Animated.Value(0)).current;
+  const translateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [distance, 0],
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.spring(progress, {
+        damping: 18,
+        mass: 0.8,
+        stiffness: 150,
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [delay, progress]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity: progress,
+          transform: [{ translateY }],
+        },
+      ]}>
+      {children}
+    </Animated.View>
+  );
+}
+
+export function CareScrollView({
+  children,
+  contentContainerStyle,
+  onContentSizeChange,
+  onLayout,
+  onScroll,
+  onScrollBeginDrag,
+  onScrollEndDrag,
+  onMomentumScrollEnd,
+  scrollEventThrottle = 16,
+  showCareScrollbar = true,
+  style,
+  ...props
+}: CareScrollViewProps) {
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const indicatorOpacity = useRef(new Animated.Value(0)).current;
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(1);
+  const [contentHeight, setContentHeight] = useState(1);
+  const canScroll = contentHeight > viewportHeight + 2;
+  const thumbHeight = Math.max(36, (viewportHeight / contentHeight) * viewportHeight);
+  const maxThumbTranslate = Math.max(0, viewportHeight - thumbHeight - 12);
+  const maxScroll = Math.max(1, contentHeight - viewportHeight);
+  const thumbTranslateY = scrollY.interpolate({
+    extrapolate: 'clamp',
+    inputRange: [0, maxScroll],
+    outputRange: [0, maxThumbTranslate],
+  });
+
+  const showIndicator = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+
+    if (!canScroll) {
+      return;
+    }
+
+    Animated.timing(indicatorOpacity, {
+      duration: 160,
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const hideIndicator = () => {
+    hideTimer.current = setTimeout(() => {
+      Animated.timing(indicatorOpacity, {
+        duration: 320,
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }, 420);
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollY.setValue(event.nativeEvent.contentOffset.y);
+    onScroll?.(event);
+  };
+
+  return (
+    <View style={[styles.scrollFrame, style]}>
+      <Animated.ScrollView
+        {...props}
+        contentContainerStyle={contentContainerStyle}
+        onContentSizeChange={(width, height) => {
+          setContentHeight(height);
+          onContentSizeChange?.(width, height);
+        }}
+        onLayout={(event) => {
+          setViewportHeight(event.nativeEvent.layout.height);
+          onLayout?.(event);
+        }}
+        onMomentumScrollEnd={(event) => {
+          hideIndicator();
+          onMomentumScrollEnd?.(event);
+        }}
+        onScroll={handleScroll}
+        onScrollBeginDrag={(event) => {
+          showIndicator();
+          onScrollBeginDrag?.(event);
+        }}
+        onScrollEndDrag={(event) => {
+          hideIndicator();
+          onScrollEndDrag?.(event);
+        }}
+        scrollEventThrottle={scrollEventThrottle}
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}>
+        {children}
+      </Animated.ScrollView>
+      {showCareScrollbar && canScroll ? (
+        <View pointerEvents="none" style={styles.scrollbarTrack}>
+          <Animated.View
+            style={[
+              styles.scrollbarThumb,
+              {
+                height: thumbHeight,
+                opacity: indicatorOpacity,
+                transform: [{ translateY: thumbTranslateY }],
+              },
+            ]}
+          />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+export function Screen({
+  children,
+  backgroundColor = CAREON_COLORS.background,
+  contentStyle,
+  edges = DEFAULT_SCREEN_EDGES,
+  scroll,
+}: ScreenProps) {
   if (scroll) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
-        <ScrollView
+      <SafeAreaView edges={edges} style={[styles.safeArea, { backgroundColor }]}>
+        <CareScrollView
           bounces={false}
           contentContainerStyle={[styles.scrollContent, contentStyle]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
+          keyboardShouldPersistTaps="handled">
           {children}
-        </ScrollView>
+        </CareScrollView>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
+    <SafeAreaView edges={edges} style={[styles.safeArea, { backgroundColor }]}>
       <View style={[styles.content, contentStyle]}>{children}</View>
     </SafeAreaView>
   );
@@ -169,6 +342,27 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 28,
+  },
+  scrollFrame: {
+    flex: 1,
+    position: 'relative',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollbarTrack: {
+    backgroundColor: 'rgba(36, 200, 152, 0.1)',
+    borderRadius: 999,
+    bottom: 12,
+    position: 'absolute',
+    right: 6,
+    top: 12,
+    width: 4,
+  },
+  scrollbarThumb: {
+    backgroundColor: CAREON_COLORS.primary,
+    borderRadius: 999,
+    width: 4,
   },
   header: {
     alignItems: 'center',

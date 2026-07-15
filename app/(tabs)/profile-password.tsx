@@ -3,16 +3,17 @@ import { StyleSheet, View } from 'react-native';
 
 import { CareButton, FormField, Header, Screen } from '@/components/careon/shared';
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { goBackOrReplace } from '@/lib/navigation';
+import { replaceRoute } from '@/lib/navigation';
 
 export default function ProfilePasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const returnToMyPage = () => replaceRoute('/mypage');
 
   return (
     <Screen contentStyle={styles.content}>
-      <Header onBack={() => goBackOrReplace('/mypage')} title="비밀번호 변경" />
+      <Header onBack={returnToMyPage} title="비밀번호 변경" />
 
       <View style={styles.form}>
         <FormField
@@ -41,7 +42,7 @@ export default function ProfilePasswordScreen() {
         />
       </View>
 
-      <CareButton onPress={() => goBackOrReplace('/mypage')} style={styles.saveButton}>
+      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
         저장
       </CareButton>
     </Screen>
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   form: {
     gap: 22,
     marginTop: 72,
-    paddingHorizontal: 45,
+    paddingHorizontal: 32,
   },
   input: {
     backgroundColor: CAREON_COLORS.input,
@@ -63,6 +64,7 @@ const styles = StyleSheet.create({
   saveButton: {
     alignSelf: 'center',
     marginTop: 42,
-    width: 312,
+    maxWidth: 312,
+    width: '82%',
   },
 });

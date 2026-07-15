@@ -5,18 +5,22 @@ import { CareButton, FormField, Screen } from '@/components/careon/shared';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { pushRoute } from '@/lib/navigation';
 
+const FIELD_GAP = 24;
+const LOGIN_BUTTON_GAP = FIELD_GAP * 2;
+const SIGNUP_COPY_GAP = LOGIN_BUTTON_GAP * 1.5;
+
 export default function OnboardingScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   return (
-    <Screen>
+    <Screen scroll contentStyle={styles.screen}>
       <KeyboardAvoidingView
         behavior={Platform.select({ ios: 'padding', default: undefined })}
         style={styles.keyboard}>
         <View style={styles.hero}>
-          <Text style={styles.title}>CareON에 오신 걸 환영해요</Text>
-          <Text style={styles.description}>웹에서 저장한 제도와 일정을 앱에서 바로 확인할 수 있어요</Text>
+          <Text adjustsFontSizeToFit numberOfLines={1} style={styles.title}>CareON에 오신 걸 환영해요</Text>
+          <Text adjustsFontSizeToFit numberOfLines={1} style={styles.description}>웹에서 저장한 제도와 일정을 앱에서 바로 확인할 수 있어요</Text>
         </View>
 
         <View style={styles.form}>
@@ -59,37 +63,41 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   keyboard: {
     flex: 1,
-    paddingHorizontal: 42,
+    maxWidth: 360,
+    paddingHorizontal: 24,
+    width: '100%',
+  },
+  screen: {
+    alignItems: 'center',
   },
   hero: {
-    marginTop: 93,
+    marginTop: 72,
   },
   title: {
     color: CAREON_COLORS.title,
-    fontSize: 33,
+    fontSize: 22,
     fontWeight: '800',
-    lineHeight: 41,
+    lineHeight: 28,
   },
   description: {
     color: CAREON_COLORS.text,
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '500',
-    lineHeight: 21,
-    marginTop: 14,
-    width: 300,
+    lineHeight: 16,
+    marginTop: 10,
   },
   form: {
-    gap: 24,
-    marginTop: 67,
+    gap: FIELD_GAP,
+    marginTop: 56,
   },
   actions: {
-    marginTop: 'auto',
-    paddingBottom: 112,
+    marginTop: LOGIN_BUTTON_GAP,
+    paddingBottom: 64,
   },
   signupCopy: {
     alignItems: 'center',
     gap: 7,
-    marginTop: 29,
+    marginTop: SIGNUP_COPY_GAP,
   },
   mutedText: {
     color: CAREON_COLORS.faint,

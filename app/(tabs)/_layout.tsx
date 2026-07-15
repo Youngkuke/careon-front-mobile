@@ -1,11 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const tabBarBottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 15) : 15;
+  const tabBarHeight = 60 + tabBarBottomPadding;
+  const tabBarStyle = {
+    backgroundColor: CAREON_COLORS.page,
+    borderTopWidth: 0,
+    elevation: 0,
+    height: tabBarHeight,
+    paddingBottom: tabBarBottomPadding,
+    paddingTop: 8,
+    shadowOpacity: 0,
+  };
+
   return (
     <Tabs
       screenOptions={{
@@ -17,16 +32,9 @@ export default function TabLayout() {
           fontSize: 10,
           fontWeight: '500',
           lineHeight: 12,
+          marginTop: 3,
         },
-        tabBarStyle: {
-          backgroundColor: CAREON_COLORS.page,
-          borderTopWidth: 0,
-          elevation: 0,
-          height: 82,
-          paddingBottom: 15,
-          paddingTop: 12,
-          shadowOpacity: 0,
-        },
+        tabBarStyle,
       }}>
       <Tabs.Screen
         name="calendar"

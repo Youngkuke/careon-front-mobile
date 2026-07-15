@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { Screen } from '@/components/careon/shared';
 import { CAREON_COLORS } from '@/lib/careon-theme';
@@ -8,6 +8,9 @@ import { replaceRoute } from '@/lib/navigation';
 
 export default function LoadingScreen() {
   const [activeDot, setActiveDot] = useState(0);
+  const { height, width } = useWindowDimensions();
+  const imageWrapSize = Math.min(231, width * 0.62, height * 0.3);
+  const imageSize = imageWrapSize * (185 / 231);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -29,18 +32,18 @@ export default function LoadingScreen() {
     <Screen>
       <View style={styles.container}>
         <Text style={styles.greeting}>반가워요!</Text>
-        <View style={styles.imageWrap}>
+        <View style={[styles.imageWrap, { height: imageWrapSize, width: imageWrapSize }]}>
           <Image
             accessibilityIgnoresInvertColors
             contentFit="contain"
             source={require('@/assets/images/loading-glow.webp')}
-            style={styles.glowImage}
+            style={[styles.glowImage, { height: imageWrapSize, width: imageWrapSize }]}
           />
           <Image
             accessibilityIgnoresInvertColors
             contentFit="contain"
             source={require('@/assets/images/loading.webp')}
-            style={styles.image}
+            style={[styles.image, { height: imageSize, width: imageSize }]}
           />
         </View>
         <View accessibilityLabel="로딩 중" style={styles.dots}>
@@ -69,19 +72,12 @@ const styles = StyleSheet.create({
   },
   imageWrap: {
     alignItems: 'center',
-    height: 231,
     justifyContent: 'center',
-    width: 231,
   },
   glowImage: {
-    height: 231,
     position: 'absolute',
-    width: 231,
   },
-  image: {
-    height: 185,
-    width: 185,
-  },
+  image: {},
   dots: {
     flexDirection: 'row',
     gap: 13,
