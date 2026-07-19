@@ -299,13 +299,16 @@ export default function CalendarScreen() {
 
             return (
               <View key={event.id} style={styles.ddayCard}>
-                <View style={styles.ddayTopRow}>
-                  <Text style={[styles.ddayLabel, { color: event.color }]}>{event.type === 'deadline' ? '마감일' : '결과 발표일'} · {event.day}일</Text>
-                  <View style={[styles.ddayBadge, { borderColor: event.color }]}>
-                    <Text style={[styles.ddayBadgeText, { color: event.color }]}>{formatEventDday(event, today)}</Text>
+                <View style={[styles.ddayColorBar, { backgroundColor: event.color }]} />
+                <View style={styles.ddayBody}>
+                  <View style={styles.ddayTopRow}>
+                    <Text style={[styles.ddayLabel, { color: event.color }]}>{event.type === 'deadline' ? '마감일' : '결과 발표일'} · {event.day}일</Text>
+                    <View style={[styles.ddayBadge, { borderColor: event.color }]}>
+                      <Text style={[styles.ddayBadgeText, { color: event.color }]}>{formatEventDday(event, today)}</Text>
+                    </View>
                   </View>
+                  <Text numberOfLines={1} style={styles.ddayTitle}>{program.title}</Text>
                 </View>
-                <Text numberOfLines={1} style={styles.ddayTitle}>{program.title}</Text>
               </View>
             );
           }) : (
@@ -515,10 +518,21 @@ const styles = StyleSheet.create({
   ddayCard: {
     backgroundColor: CAREON_COLORS.page,
     borderRadius: 12,
-    gap: 7,
+    flexDirection: 'row',
+    gap: 12,
     minHeight: 58,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
     paddingVertical: 13,
+  },
+  ddayColorBar: {
+    alignSelf: 'stretch',
+    borderRadius: 5,
+    width: 5,
+  },
+  ddayBody: {
+    flex: 1,
+    gap: 7,
+    justifyContent: 'center',
   },
   ddayTopRow: {
     alignItems: 'center',

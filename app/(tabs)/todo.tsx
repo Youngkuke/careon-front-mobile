@@ -69,7 +69,11 @@ export default function TodoScreen() {
                         onPress={() => toggleDocument(key)}
                         style={({ pressed }) => [styles.checkLine, pressed && styles.pressedCheckLine]}>
                         <View style={[styles.checkbox, checked && styles.checkedBox]}>
-                          {checked ? <Ionicons color={CAREON_COLORS.background} name="checkmark" size={13} /> : null}
+                          <Ionicons
+                            color={checked ? CAREON_COLORS.background : CAREON_COLORS.primary}
+                            name="checkmark"
+                            size={checked ? 17 : 15}
+                          />
                         </View>
                         <View style={styles.checkText}>
                           <Text style={[styles.checkTitle, checked && styles.checkedText]}>{document.title}</Text>
@@ -84,7 +88,7 @@ export default function TodoScreen() {
                   onPress={() => Linking.openURL(program.url)}
                   style={({ pressed }) => [styles.linkButton, pressed && styles.pressedLink]}>
                   <Text style={styles.linkText}>공식 페이지</Text>
-                  <Ionicons color={CAREON_COLORS.text} name="open-outline" size={18} />
+                  <Ionicons color={CAREON_COLORS.text} name="open-outline" size={13} />
                 </Pressable>
               </View>
             </CareEntrance>
@@ -200,18 +204,20 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     alignItems: 'center',
+    backgroundColor: CAREON_COLORS.background,
     borderColor: CAREON_COLORS.primary,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    height: 20,
+    borderRadius: 7,
+    borderWidth: 2,
+    height: 24,
     justifyContent: 'center',
-    marginTop: 1,
-    width: 20,
+    marginTop: 0,
+    width: 24,
   },
   checkedBox: {
     backgroundColor: CAREON_COLORS.primary,
   },
   checkText: {
+    flex: 1,
     gap: 5,
   },
   checkTitle: {

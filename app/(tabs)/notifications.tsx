@@ -168,7 +168,6 @@ export default function NotificationsScreen() {
           <View style={styles.emptyCard}>
             <Ionicons color={CAREON_COLORS.primary} name="checkmark-circle" size={30} />
             <Text style={styles.emptyTitle}>새 알림이 없어요</Text>
-            <Text style={styles.emptyText}>확인한 알림은 이 화면에서 사라져요.</Text>
           </View>
         )}
       </View>
@@ -266,12 +265,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 20,
     marginTop: 10,
-  },
-  emptyText: {
-    color: CAREON_COLORS.muted,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-    marginTop: 5,
   },
 });
