@@ -78,13 +78,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile-email"
-        options={{
-          href: null,
-          title: '이메일',
-        }}
-      />
-      <Tabs.Screen
         name="profile-password"
         options={{
           href: null,
