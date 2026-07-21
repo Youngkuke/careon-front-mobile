@@ -66,7 +66,6 @@ export default function MyPageScreen() {
           <SettingRow
             icon="mail-outline"
             label="이메일"
-            onPress={() => pushRoute('/profile-email')}
             value={MOCK_USER.email}
           />
           <SettingRow
