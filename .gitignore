@@ -32,12 +32,13 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
 
 # Project planning docs
-/api.md
+/mobile_api.md
 
 app-example
 

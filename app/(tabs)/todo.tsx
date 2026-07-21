@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CareEntrance, Screen, sharedStyles } from '@/components/careon/shared';
-import { useChecklist } from '@/lib/checklist-state';
+import { ApiError } from '@/lib/api';
+import { useAppData } from '@/lib/app-data-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { SAVED_PROGRAMS } from '@/lib/mock-data';
 
 function splitDeadline(deadline: string) {
   const match = deadline.match(/^(.*?)(\s*\([^)]+\))$/);
@@ -17,11 +19,38 @@ function splitDeadline(deadline: string) {
 }
 
 export default function TodoScreen() {
-  const { checkedDocuments, getDocumentKey, toggleDocument } = useChecklist();
-  const totalDocuments = SAVED_PROGRAMS.reduce((total, program) => total + program.documents.length, 0);
-  const completedDocuments = SAVED_PROGRAMS.reduce((total, program) => {
-    return total + program.documents.filter((document) => checkedDocuments[getDocumentKey(program.id, document.title)]).length;
+  const { answerExpiredPolicy, refreshData, todoPrograms, toggleTodo } = useAppData();
+  const [answeringPolicyIds, setAnsweringPolicyIds] = useState<Record<number, boolean>>({});
+  const totalDocuments = todoPrograms.reduce((total, program) => total + program.documents.length, 0);
+  const completedDocuments = todoPrograms.reduce((total, program) => {
+    return total + program.documents.filter((document) => document.isChecked).length;
   }, 0);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshData().catch(() => undefined);
+    }, [refreshData]),
+  );
+
+  const handleToggleTodo = async (todoId: number, isChecked: boolean) => {
+    try {
+      await toggleTodo(todoId, isChecked);
+    } catch (error) {
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '체크 상태를 변경하지 못했어요.');
+    }
+  };
+
+  const handleAnswerExpiredPolicy = async (savedPolicyId: number, applied: boolean) => {
+    setAnsweringPolicyIds((current) => ({ ...current, [savedPolicyId]: true }));
+
+    try {
+      await answerExpiredPolicy(savedPolicyId, applied);
+    } catch (error) {
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '신청 여부를 저장하지 못했어요.');
+    } finally {
+      setAnsweringPolicyIds((current) => ({ ...current, [savedPolicyId]: false }));
+    }
+  };
 
   return (
     <Screen scroll backgroundColor={CAREON_COLORS.page} contentStyle={styles.content}>
@@ -36,8 +65,8 @@ export default function TodoScreen() {
       </View>
 
       <View style={styles.sections}>
-        {SAVED_PROGRAMS.map((program, programIndex) => {
-          const checkedCount = program.documents.filter((document) => checkedDocuments[getDocumentKey(program.id, document.title)]).length;
+        {todoPrograms.length ? todoPrograms.map((program, programIndex) => {
+          const checkedCount = program.documents.filter((document) => document.isChecked).length;
           const deadline = splitDeadline(program.deadline);
 
           return (
@@ -50,50 +79,88 @@ export default function TodoScreen() {
                       {deadline.weekday ? <Text>{deadline.weekday}</Text> : null}
                     </Text>
                   </View>
-                  <Text style={styles.cardCount}>{checkedCount}/{program.documents.length}</Text>
+                  <Text style={styles.cardCount}>
+                    {program.isExpired ? '마감' : `${checkedCount}/${program.documents.length}`}
+                  </Text>
                 </View>
 
                 <Text style={styles.programTitle}>{program.title}</Text>
-                <Text style={styles.programAgency}>{program.agency}</Text>
 
-                <View style={styles.documentList}>
-                  {program.documents.map((document) => {
-                    const key = getDocumentKey(program.id, document.title);
-                    const checked = checkedDocuments[key];
-
-                    return (
+                {program.isExpired ? (
+                  <View style={styles.expiredBlock}>
+                    <Text style={styles.expiredQuestion}>이 제도를 신청하셨나요?</Text>
+                    <View style={styles.expiredActions}>
                       <Pressable
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked }}
-                        key={document.title}
-                        onPress={() => toggleDocument(key)}
-                        style={({ pressed }) => [styles.checkLine, pressed && styles.pressedCheckLine]}>
-                        <View style={[styles.checkbox, checked && styles.checkedBox]}>
-                          <Ionicons
-                            color={checked ? CAREON_COLORS.background : CAREON_COLORS.primary}
-                            name="checkmark"
-                            size={checked ? 17 : 15}
-                          />
-                        </View>
-                        <View style={styles.checkText}>
-                          <Text style={[styles.checkTitle, checked && styles.checkedText]}>{document.title}</Text>
-                          <Text style={[styles.checkGuide, checked && styles.checkedGuide]}>{document.guide}</Text>
-                        </View>
+                        accessibilityRole="button"
+                        disabled={answeringPolicyIds[program.savedPolicyId]}
+                        onPress={() => handleAnswerExpiredPolicy(program.savedPolicyId, true)}
+                        style={({ pressed }) => [
+                          styles.answerButton,
+                          styles.yesButton,
+                          pressed && styles.pressedAnswerButton,
+                          answeringPolicyIds[program.savedPolicyId] && styles.disabledAnswerButton,
+                        ]}>
+                        <Text style={styles.yesButtonText}>예</Text>
                       </Pressable>
-                    );
-                  })}
-                </View>
-                <Pressable
-                  accessibilityRole="link"
-                  onPress={() => Linking.openURL(program.url)}
-                  style={({ pressed }) => [styles.linkButton, pressed && styles.pressedLink]}>
-                  <Text style={styles.linkText}>공식 페이지</Text>
-                  <Ionicons color={CAREON_COLORS.text} name="open-outline" size={13} />
-                </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={answeringPolicyIds[program.savedPolicyId]}
+                        onPress={() => handleAnswerExpiredPolicy(program.savedPolicyId, false)}
+                        style={({ pressed }) => [
+                          styles.answerButton,
+                          styles.noButton,
+                          pressed && styles.pressedAnswerButton,
+                          answeringPolicyIds[program.savedPolicyId] && styles.disabledAnswerButton,
+                        ]}>
+                        <Text style={styles.noButtonText}>아니오</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.documentList}>
+                    {program.documents.map((document) => {
+                      const checked = document.isChecked;
+
+                      return (
+                        <Pressable
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked }}
+                          key={document.todoId}
+                          onPress={() => handleToggleTodo(document.todoId, !checked)}
+                          style={({ pressed }) => [styles.checkLine, pressed && styles.pressedCheckLine]}>
+                          <View style={[styles.checkbox, checked && styles.checkedBox]}>
+                            <Ionicons
+                              color={checked ? CAREON_COLORS.background : CAREON_COLORS.primary}
+                              name="checkmark"
+                              size={checked ? 17 : 15}
+                            />
+                          </View>
+                          <View style={styles.checkText}>
+                            <Text style={[styles.checkTitle, checked && styles.checkedText]}>{document.title}</Text>
+                            <Text style={[styles.checkGuide, checked && styles.checkedGuide]}>{document.guide}</Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+                {program.sourceUrl ? (
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => Linking.openURL(program.sourceUrl)}
+                    style={({ pressed }) => [styles.linkButton, pressed && styles.pressedLink]}>
+                    <Text style={styles.linkText}>공식 페이지</Text>
+                    <Ionicons color={CAREON_COLORS.text} name="open-outline" size={13} />
+                  </Pressable>
+                ) : null}
               </View>
             </CareEntrance>
           );
-        })}
+        }) : (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>준비할 서류가 없어요.</Text>
+          </View>
+        )}
       </View>
     </Screen>
   );
@@ -186,9 +253,71 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     marginTop: 5,
   },
+  emptyCard: {
+    alignItems: 'center',
+    backgroundColor: CAREON_COLORS.background,
+    borderRadius: 20,
+    minHeight: 96,
+    justifyContent: 'center',
+    ...sharedStyles.cardShadow,
+  },
+  emptyText: {
+    color: CAREON_COLORS.muted,
+    fontSize: 14,
+    fontWeight: '700',
+  },
   documentList: {
     gap: 10,
     marginTop: 16,
+  },
+  expiredBlock: {
+    backgroundColor: CAREON_COLORS.page,
+    borderRadius: 14,
+    gap: 14,
+    marginTop: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  expiredQuestion: {
+    color: CAREON_COLORS.title,
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 19,
+  },
+  expiredActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  answerButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    flex: 1,
+    minHeight: 42,
+    justifyContent: 'center',
+  },
+  yesButton: {
+    backgroundColor: CAREON_COLORS.primary,
+  },
+  noButton: {
+    backgroundColor: CAREON_COLORS.background,
+    borderColor: CAREON_COLORS.line,
+    borderWidth: 1,
+  },
+  pressedAnswerButton: {
+    opacity: 0.75,
+  },
+  disabledAnswerButton: {
+    opacity: 0.55,
+  },
+  yesButtonText: {
+    color: CAREON_COLORS.background,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  noButtonText: {
+    color: CAREON_COLORS.text,
+    fontSize: 14,
+    fontWeight: '900',
   },
   checkLine: {
     alignItems: 'flex-start',

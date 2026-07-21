@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CareButton, CareEntrance, Screen, sharedStyles } from '@/components/careon/shared';
+import { ApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS, CAREON_SHADOW } from '@/lib/careon-theme';
-import { MOCK_USER } from '@/lib/mock-data';
-import { pushRoute } from '@/lib/navigation';
+import { pushRoute, replaceRoute } from '@/lib/navigation';
 
 type SettingRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -37,7 +38,57 @@ function SettingRow({ icon, label, value, onPress, accessory }: SettingRowProps)
 }
 
 export default function MyPageScreen() {
-  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const { deleteAccount, logout, updateMe, user } = useAuth();
+  const [notificationEnabled, setNotificationEnabled] = useState(user?.notificationEnabled ?? false);
+  const displayName = user?.name ?? '';
+  const displayEmail = user?.email ?? '';
+  const displayRegion = user?.region ?? '';
+
+  useEffect(() => {
+    setNotificationEnabled(user?.notificationEnabled ?? false);
+  }, [user?.notificationEnabled]);
+
+  const handleNotificationChange = async (nextValue: boolean) => {
+    setNotificationEnabled(nextValue);
+
+    try {
+      await updateMe({ notificationEnabled: nextValue });
+    } catch (error) {
+      setNotificationEnabled(!nextValue);
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '알림 설정을 저장하지 못했어요.');
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert('로그아웃', '로그아웃할까요?', [
+      { style: 'cancel', text: '취소' },
+      {
+        onPress: async () => {
+          await logout();
+          replaceRoute('/onboarding');
+        },
+        text: '로그아웃',
+      },
+    ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert('회원 탈퇴', '계정을 삭제할까요? 저장한 제도와 알림도 함께 정리됩니다.', [
+      { style: 'cancel', text: '취소' },
+      {
+        onPress: async () => {
+          try {
+            await deleteAccount();
+            replaceRoute('/onboarding');
+          } catch (error) {
+            Alert.alert('탈퇴 실패', error instanceof ApiError ? error.message : '회원 탈퇴를 완료하지 못했어요.');
+          }
+        },
+        style: 'destructive',
+        text: '탈퇴',
+      },
+    ]);
+  };
 
   return (
     <Screen scroll backgroundColor={CAREON_COLORS.page} contentStyle={styles.content}>
@@ -46,11 +97,11 @@ export default function MyPageScreen() {
       <CareEntrance delay={80}>
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{MOCK_USER.name.slice(0, 1)}</Text>
+            <Text style={styles.avatarText}>{displayName.slice(0, 1)}</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{MOCK_USER.name}</Text>
-            <Text numberOfLines={1} style={styles.profileEmail}>{MOCK_USER.email}</Text>
+            <Text style={styles.profileName}>{displayName}</Text>
+            <Text numberOfLines={1} style={styles.profileEmail}>{displayEmail}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -66,7 +117,7 @@ export default function MyPageScreen() {
           <SettingRow
             icon="mail-outline"
             label="이메일"
-            value={MOCK_USER.email}
+            value={displayEmail}
           />
           <SettingRow
             icon="lock-closed-outline"
@@ -77,7 +128,7 @@ export default function MyPageScreen() {
             icon="location-outline"
             label="거주지"
             onPress={() => pushRoute('/profile-district')}
-            value={MOCK_USER.district}
+            value={displayRegion}
           />
         </View>
       </CareEntrance>
@@ -88,7 +139,7 @@ export default function MyPageScreen() {
             accessory={
               <Switch
                 ios_backgroundColor={CAREON_COLORS.line}
-                onValueChange={setNotificationEnabled}
+                onValueChange={handleNotificationChange}
                 thumbColor={CAREON_COLORS.background}
                 trackColor={{ false: CAREON_COLORS.line, true: CAREON_COLORS.primary }}
                 value={notificationEnabled}
@@ -102,10 +153,10 @@ export default function MyPageScreen() {
 
       <CareEntrance delay={290}>
         <View style={styles.actions}>
-          <CareButton onPress={() => Alert.alert('로그아웃', '더미 화면에서는 실제 로그아웃을 수행하지 않아요.')} variant="white">
+          <CareButton onPress={handleLogout} variant="white">
             로그아웃
           </CareButton>
-          <CareButton onPress={() => Alert.alert('회원 탈퇴', '더미 화면에서는 실제 탈퇴를 수행하지 않아요.')} variant="dangerText">
+          <CareButton onPress={handleDeleteAccount} variant="dangerText">
             회원 탈퇴
           </CareButton>
         </View>

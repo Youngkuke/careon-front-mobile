@@ -1,15 +1,31 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CareButton, Header, Screen } from '@/components/careon/shared';
+import { ApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { MOCK_USER, SEOUL_DISTRICTS } from '@/lib/mock-data';
+import { SEOUL_DISTRICTS } from '@/lib/mock-data';
 import { replaceRoute } from '@/lib/navigation';
 
 export default function ProfileDistrictScreen() {
-  const [district, setDistrict] = useState(MOCK_USER.district);
+  const { updateMe, user } = useAuth();
+  const [district, setDistrict] = useState(user?.region ?? '');
+  const [saving, setSaving] = useState(false);
   const returnToMyPage = () => replaceRoute('/mypage');
+  const handleSave = async () => {
+    setSaving(true);
+
+    try {
+      await updateMe({ region: district });
+      returnToMyPage();
+    } catch (error) {
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '거주지를 변경하지 못했어요.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Screen scroll contentStyle={styles.content}>
@@ -35,8 +51,8 @@ export default function ProfileDistrictScreen() {
         })}
       </View>
 
-      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
-        저장
+      <CareButton disabled={saving} onPress={handleSave} style={styles.saveButton}>
+        {saving ? '저장 중' : '저장'}
       </CareButton>
     </Screen>
   );

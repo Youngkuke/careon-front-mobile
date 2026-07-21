@@ -241,24 +241,27 @@ export function Header({ title, onBack, right, style }: HeaderProps) {
 }
 
 type CareButtonProps = PropsWithChildren<{
+  disabled?: boolean;
   onPress?: () => void;
   textStyle?: StyleProp<TextStyle>;
   variant?: 'primary' | 'white' | 'dangerText';
   style?: StyleProp<ViewStyle>;
 }>;
 
-export function CareButton({ children, onPress, style, textStyle, variant = 'primary' }: CareButtonProps) {
+export function CareButton({ children, disabled, onPress, style, textStyle, variant = 'primary' }: CareButtonProps) {
   const isPrimary = variant === 'primary';
   const isDanger = variant === 'dangerText';
 
   return (
     <Pressable
       accessibilityRole="button"
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
         isPrimary ? styles.primaryButton : styles.whiteButton,
-        pressed && styles.pressed,
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabledButton,
         style,
       ]}>
       <Text
@@ -404,6 +407,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.82,
+  },
+  disabledButton: {
+    opacity: 0.55,
   },
   buttonText: {
     color: CAREON_COLORS.primaryDark,
