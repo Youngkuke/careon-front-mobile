@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { KeyboardTypeOptions, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, KeyboardTypeOptions, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { ApiError } from '@/lib/api';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { replaceRoute } from '@/lib/navigation';
 
@@ -11,6 +12,7 @@ type ProfileTextEditScreenProps = {
   title: string;
   initialValue: string;
   keyboardType?: KeyboardTypeOptions;
+  onSave: (value: string) => Promise<void>;
   secureTextEntry?: boolean;
 };
 
@@ -18,10 +20,24 @@ export function ProfileTextEditScreen({
   title,
   initialValue,
   keyboardType,
+  onSave,
   secureTextEntry,
 }: ProfileTextEditScreenProps) {
   const [value, setValue] = useState(initialValue);
+  const [saving, setSaving] = useState(false);
   const returnToMyPage = () => replaceRoute('/mypage');
+  const handleSave = async () => {
+    setSaving(true);
+
+    try {
+      await onSave(value.trim());
+      returnToMyPage();
+    } catch (error) {
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '회원 정보를 수정하지 못했어요.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Screen contentStyle={styles.content}>
@@ -46,8 +62,8 @@ export function ProfileTextEditScreen({
         ) : null}
       </View>
 
-      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
-        저장
+      <CareButton disabled={saving} onPress={handleSave} style={styles.saveButton}>
+        {saving ? '저장 중' : '저장'}
       </CareButton>
     </Screen>
   );

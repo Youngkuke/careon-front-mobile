@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Header, Screen } from '@/components/careon/shared';
+import { ApiError } from '@/lib/api';
+import { NotificationItem, useAppData } from '@/lib/app-data-state';
 import { CAREON_COLORS, CAREON_SHADOW } from '@/lib/careon-theme';
-import { NOTIFICATIONS, NotificationItem } from '@/lib/mock-data';
 import { goBackOrReplace } from '@/lib/navigation';
-import { useNotifications } from '@/lib/notification-state';
 
 const iconSources = {
   date: require('@/assets/images/date.webp'),
@@ -67,10 +67,12 @@ function NotificationCard({
   delay = 0,
   item,
   onDismiss,
+  onOpen,
 }: {
   delay?: number;
   item: NotificationItem;
   onDismiss: (id: string) => void;
+  onOpen: (policyId: number) => void;
 }) {
   const iconKey = getIconKey(item);
   const entrance = useRef(new Animated.Value(0)).current;
@@ -133,18 +135,38 @@ function NotificationCard({
           transform: [{ translateY: entranceTranslateY }, { translateX }],
         },
       ]}>
-      <NotificationIcon iconKey={iconKey} />
-      <View style={styles.messageBlock}>
-        <Text style={styles.message}>{item.message}</Text>
-      </View>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => onOpen(item.policyId)}
+        style={({ pressed }) => [styles.itemPressable, pressed && styles.pressedItem]}>
+        <NotificationIcon iconKey={iconKey} />
+        <View style={styles.messageBlock}>
+          <Text style={styles.message}>{item.message}</Text>
+        </View>
+        <Text style={styles.timestamp}>{item.timestamp}</Text>
+      </Pressable>
     </Animated.View>
   );
 }
 
 export default function NotificationsScreen() {
-  const { dismissAllNotifications, dismissNotification, visibleNotificationIds } = useNotifications();
-  const visibleNotifications = NOTIFICATIONS.filter((item) => visibleNotificationIds.has(item.id));
+  const {
+    dismissAllNotifications,
+    dismissNotification,
+    loadNotifications,
+    notifications: visibleNotifications,
+  } = useAppData();
+
+  useEffect(() => {
+    loadNotifications().catch((error) => {
+      Alert.alert('알림 조회 실패', error instanceof ApiError ? error.message : '알림을 불러오지 못했어요.');
+    });
+  }, [loadNotifications]);
+
+  const handleOpenNotification = (policyId: number) => {
+    void policyId;
+    goBackOrReplace('/calendar');
+  };
 
   return (
     <Screen scroll backgroundColor={CAREON_COLORS.page}>
@@ -163,7 +185,13 @@ export default function NotificationsScreen() {
 
       <View style={styles.list}>
         {visibleNotifications.length ? visibleNotifications.map((item, index) => (
-          <NotificationCard delay={80 + (index * 60)} item={item} key={item.id} onDismiss={dismissNotification} />
+          <NotificationCard
+            delay={80 + (index * 60)}
+            item={item}
+            key={item.id}
+            onDismiss={dismissNotification}
+            onOpen={handleOpenNotification}
+          />
         )) : (
           <View style={styles.emptyCard}>
             <Ionicons color={CAREON_COLORS.primary} name="checkmark-circle" size={30} />
@@ -205,13 +233,20 @@ const styles = StyleSheet.create({
   item: {
     backgroundColor: CAREON_COLORS.background,
     borderRadius: 18,
+    minHeight: 102,
+    overflow: 'hidden',
+    ...CAREON_SHADOW,
+  },
+  itemPressable: {
     flexDirection: 'row',
     gap: 12,
     minHeight: 102,
     paddingBottom: 30,
     paddingHorizontal: 16,
     paddingTop: 16,
-    ...CAREON_SHADOW,
+  },
+  pressedItem: {
+    opacity: 0.74,
   },
   iconWrap: {
     height: 34,

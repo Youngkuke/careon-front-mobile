@@ -1,15 +1,36 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { CareButton, FormField, Header, Screen } from '@/components/careon/shared';
+import { ApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { replaceRoute } from '@/lib/navigation';
 
 export default function ProfilePasswordScreen() {
+  const { updateMe } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
   const returnToMyPage = () => replaceRoute('/mypage');
+  const handleSave = async () => {
+    if (newPassword !== confirmPassword) {
+      Alert.alert('확인 필요', '새 비밀번호가 서로 일치하지 않아요.');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await updateMe({ password: newPassword });
+      returnToMyPage();
+    } catch (error) {
+      Alert.alert('저장 실패', error instanceof ApiError ? error.message : '비밀번호를 변경하지 못했어요.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Screen contentStyle={styles.content}>
@@ -42,8 +63,8 @@ export default function ProfilePasswordScreen() {
         />
       </View>
 
-      <CareButton onPress={returnToMyPage} style={styles.saveButton}>
-        저장
+      <CareButton disabled={saving} onPress={handleSave} style={styles.saveButton}>
+        {saving ? '저장 중' : '저장'}
       </CareButton>
     </Screen>
   );

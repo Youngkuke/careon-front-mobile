@@ -1,6 +1,14 @@
 import { ProfileTextEditScreen } from '@/components/careon/profile-edit-screen';
-import { MOCK_USER } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-state';
 
 export default function ProfileNameScreen() {
-  return <ProfileTextEditScreen initialValue={MOCK_USER.name} title="이름/닉네임" />;
+  const { updateMe, user } = useAuth();
+
+  return (
+    <ProfileTextEditScreen
+      initialValue={user?.name ?? ''}
+      onSave={(name) => updateMe({ name })}
+      title="이름/닉네임"
+    />
+  );
 }

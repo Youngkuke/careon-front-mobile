@@ -1,17 +1,34 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { CareButton, FormField, Screen } from '@/components/careon/shared';
+import { ApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { pushRoute } from '@/lib/navigation';
+import { replaceRoute } from '@/lib/navigation';
 
 const FIELD_GAP = 24;
 const LOGIN_BUTTON_GAP = FIELD_GAP * 2;
 const SIGNUP_COPY_GAP = LOGIN_BUTTON_GAP * 1.5;
 
 export default function OnboardingScreen() {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleLogin = async () => {
+    setSubmitting(true);
+
+    try {
+      await login(email.trim(), password);
+      replaceRoute('/loading');
+    } catch (error) {
+      Alert.alert('로그인 실패', error instanceof ApiError ? error.message : '로그인에 실패했어요.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Screen scroll contentStyle={styles.screen}>
@@ -42,7 +59,9 @@ export default function OnboardingScreen() {
         </View>
 
         <View style={styles.actions}>
-          <CareButton onPress={() => pushRoute('/loading')}>로그인</CareButton>
+          <CareButton disabled={submitting} onPress={handleLogin}>
+            {submitting ? '로그인 중' : '로그인'}
+          </CareButton>
           <View style={styles.signupCopy}>
             <Text style={styles.mutedText}>아직 계정이 없으신가요?</Text>
             <Text style={styles.mutedText}>웹사이트에서 회원가입 후 이용할 수 있어요</Text>

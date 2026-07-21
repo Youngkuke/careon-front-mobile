@@ -3,9 +3,11 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, useWindowDimensions } from 'react-native';
 
 import { CAREON_COLORS } from '@/lib/careon-theme';
+import { useAuth } from '@/lib/auth-state';
 import { replaceRoute } from '@/lib/navigation';
 
 export default function SplashScreen() {
+  const { status } = useAuth();
   const splashProgress = useRef(new Animated.Value(0)).current;
   const { height, width } = useWindowDimensions();
   const logoWidth = Math.min(162, Math.max(130, width * 0.38));
@@ -31,6 +33,10 @@ export default function SplashScreen() {
   });
 
   useEffect(() => {
+    if (status === 'bootstrapping') {
+      return undefined;
+    }
+
     Animated.timing(splashProgress, {
       duration: 1700,
       toValue: 1,
@@ -38,11 +44,11 @@ export default function SplashScreen() {
     }).start();
 
     const timer = setTimeout(() => {
-      replaceRoute('/onboarding');
+      replaceRoute(status === 'authenticated' ? '/loading' : '/onboarding');
     }, 2150);
 
     return () => clearTimeout(timer);
-  }, [splashProgress]);
+  }, [splashProgress, status]);
 
   return (
     <Animated.View style={[styles.container, { backgroundColor }]}>
