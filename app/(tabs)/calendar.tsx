@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -11,10 +12,9 @@ import {
 } from 'react-native';
 
 import { CareEntrance, CareScrollView, Screen, sharedStyles } from '@/components/careon/shared';
+import { CalendarEvent, useAppData } from '@/lib/app-data-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
-import { CalendarEvent, CALENDAR_EVENTS, SAVED_PROGRAMS } from '@/lib/mock-data';
 import { pushRoute } from '@/lib/navigation';
-import { useNotifications } from '@/lib/notification-state';
 
 const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -54,7 +54,7 @@ function formatEventDday(event: CalendarEvent, today: Date) {
   return daysLeft > 0 ? `D-${daysLeft}` : `D+${Math.abs(daysLeft)}`;
 }
 
-function getCalendarCells(year: number, monthIndex: number) {
+function getCalendarCells(year: number, monthIndex: number, calendarEvents: CalendarEvent[]) {
   const firstDay = new Date(year, monthIndex, 1).getDay();
   const currentMonthDays = new Date(year, monthIndex + 1, 0).getDate();
   const previousMonthDays = new Date(year, monthIndex, 0).getDate();
@@ -71,7 +71,7 @@ function getCalendarCells(year: number, monthIndex: number) {
       return { label: String(dayNumber - currentMonthDays), disabled: true };
     }
 
-    const events = CALENDAR_EVENTS.filter((item) =>
+    const events = calendarEvents.filter((item) =>
       item.year === year && item.monthIndex === monthIndex && item.day === dayNumber,
     );
 
@@ -84,9 +84,9 @@ function getEventColors(events: CalendarEvent[]) {
 }
 
 export default function CalendarScreen() {
+  const { calendarEvents, hasUnreadNotifications, refreshData, savedPrograms } = useAppData();
   const [visibleMonth, setVisibleMonth] = useState({ year: BASE_YEAR, monthIndex: BASE_MONTH_INDEX });
   const [selectedDate, setSelectedDate] = useState<SelectedDate | null>(null);
-  const { hasUnreadNotifications } = useNotifications();
   const { height, width } = useWindowDimensions();
   const cardWidth = Math.min(350, width - 52);
   const cellSize = Math.floor(Math.min(290, cardWidth - 60) / 7);
@@ -107,23 +107,29 @@ export default function CalendarScreen() {
   const scheduleProgressRef = useRef(0);
   const today = useMemo(() => new Date(), []);
   const calendarCells = useMemo(
-    () => getCalendarCells(visibleMonth.year, visibleMonth.monthIndex),
-    [visibleMonth],
+    () => getCalendarCells(visibleMonth.year, visibleMonth.monthIndex, calendarEvents),
+    [calendarEvents, visibleMonth],
   );
   const upcomingEvents = useMemo(() => {
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    return CALENDAR_EVENTS
+    return calendarEvents
       .filter((event) => getEventDate(event) >= todayStart)
       .sort((a, b) => getEventDate(a).getTime() - getEventDate(b).getTime());
-  }, [today]);
+  }, [calendarEvents, today]);
   const selectedDateEvents = useMemo(() => {
     if (!selectedDate) {
       return [];
     }
 
-    return CALENDAR_EVENTS.filter((event) => isSameDate(selectedDate, event));
-  }, [selectedDate]);
+    return calendarEvents.filter((event) => isSameDate(selectedDate, event));
+  }, [calendarEvents, selectedDate]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshData().catch(() => undefined);
+    }, [refreshData]),
+  );
 
   const moveMonth = (direction: -1 | 1) => {
     setVisibleMonth((current) => {
@@ -291,7 +297,7 @@ export default function CalendarScreen() {
           contentContainerStyle={[styles.ddayList, { paddingBottom: scheduleListBottomPadding }]}
           showCareScrollbar={false}>
           {upcomingEvents.length ? upcomingEvents.map((event) => {
-            const program = SAVED_PROGRAMS.find((item) => item.id === event.programId);
+            const program = savedPrograms.find((item) => item.id === event.programId);
 
             if (!program) {
               return null;
@@ -338,7 +344,7 @@ export default function CalendarScreen() {
 
             <CareScrollView contentContainerStyle={styles.overlayList} showCareScrollbar={false}>
               {selectedDateEvents.length ? selectedDateEvents.map((event) => {
-                const program = SAVED_PROGRAMS.find((item) => item.id === event.programId);
+                const program = savedPrograms.find((item) => item.id === event.programId);
 
                 if (!program) {
                   return null;
