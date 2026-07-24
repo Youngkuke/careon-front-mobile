@@ -67,6 +67,7 @@ export type TodoPolicyResponse = {
   application_deadline: string | null;
   link: string | null;
   is_expired: boolean;
+  is_applied?: boolean;
   documents: Array<{
     todo_id: number;
     document_id: number;

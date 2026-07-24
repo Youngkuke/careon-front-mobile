@@ -48,6 +48,7 @@ export type TodoProgram = {
   title: string;
   deadline: string;
   isExpired: boolean;
+  isApplied: boolean;
   sourceUrl: string;
   documents: Array<{
     todoId: number;
@@ -190,6 +191,7 @@ function mapTodoProgram(item: TodoPolicyResponse): TodoProgram {
       todoId: document.todo_id,
     })),
     id: String(item.saved_policy_id),
+    isApplied: item.is_applied ?? false,
     isExpired: item.is_expired,
     savedPolicyId: item.saved_policy_id,
     sourceUrl: item.link ?? '',
