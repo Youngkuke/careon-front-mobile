@@ -109,7 +109,7 @@ type UpdateUserRequest = Partial<{
 type RequestOptions = {
   accessToken?: string;
   body?: unknown;
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? '';

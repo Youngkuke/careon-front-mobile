@@ -55,6 +55,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="tracking"
+        options={{
+          title: '위치',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons color={color} name={focused ? 'location' : 'location-outline'} size={28} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="mypage"
         options={{
           title: '마이페이지',
