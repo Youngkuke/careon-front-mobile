@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "CareOn이 안심 구역의 중심 위치를 설정하기 위해 현재 위치를 사용합니다."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

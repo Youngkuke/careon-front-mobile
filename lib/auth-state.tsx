@@ -15,7 +15,7 @@ import { clearStoredTokens, getStoredTokens, saveStoredTokens, type StoredTokens
 type AuthStatus = 'bootstrapping' | 'authenticated' | 'guest';
 
 type AuthContextValue = {
-  authenticatedRequest: <T>(path: string, options?: { body?: unknown; method?: 'GET' | 'POST' | 'PATCH' | 'DELETE' }) => Promise<T>;
+  authenticatedRequest: <T>(path: string, options?: { body?: unknown; method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' }) => Promise<T>;
   deleteAccount: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;

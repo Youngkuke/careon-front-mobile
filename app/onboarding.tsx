@@ -67,7 +67,7 @@ export default function OnboardingScreen() {
             <Text style={styles.mutedText}>웹사이트에서 회원가입 후 이용할 수 있어요</Text>
           </View>
           <CareButton
-            onPress={() => Linking.openURL('https://care-on-gamma.vercel.app/')}
+            onPress={() => Linking.openURL('https://www.careon.site/')}
             style={styles.signupButton}
             textStyle={styles.signupButtonText}
             variant="white">
