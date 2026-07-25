@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { AppDataProvider } from '@/lib/app-data-state';
 import { AuthProvider } from '@/lib/auth-state';
+import { WearProvider } from '@/lib/wear-state';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -17,12 +18,14 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <AuthProvider>
           <AppDataProvider>
-            <Stack screenOptions={{ contentStyle: { backgroundColor: '#FFFFFF' }, headerShown: false }}>
+            <WearProvider><Stack screenOptions={{ contentStyle: { backgroundColor: '#FFFFFF' }, headerShown: false }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="onboarding" />
               <Stack.Screen name="loading" />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
+              <Stack.Screen name="wear" />
+              <Stack.Screen name="emergency" />
+            </Stack></WearProvider>
             <StatusBar style="dark" />
           </AppDataProvider>
         </AuthProvider>

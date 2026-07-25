@@ -135,6 +135,12 @@ export default function MyPageScreen() {
 
       <CareEntrance delay={220}>
         <View style={styles.sectionCard}>
+          <SettingRow icon="watch-outline" label="워치·안심 구역" value="연결 관리" onPress={() => pushRoute('/wear')} />
+        </View>
+      </CareEntrance>
+
+      <CareEntrance delay={250}>
+        <View style={styles.sectionCard}>
           <SettingRow
             accessory={
               <Switch
@@ -151,7 +157,7 @@ export default function MyPageScreen() {
         </View>
       </CareEntrance>
 
-      <CareEntrance delay={290}>
+      <CareEntrance delay={320}>
         <View style={styles.actions}>
           <CareButton onPress={handleLogout} variant="white">
             로그아웃
