@@ -8,6 +8,7 @@ export type StoredTokens = {
 
 const ACCESS_TOKEN_KEY = 'careon.accessToken';
 const REFRESH_TOKEN_KEY = 'careon.refreshToken';
+const PUSH_TOKEN_KEY = 'careon.pushToken';
 
 async function getItem(key: string) {
   if (Platform.OS === 'web') {
@@ -60,4 +61,16 @@ export async function clearStoredTokens() {
     deleteItem(ACCESS_TOKEN_KEY),
     deleteItem(REFRESH_TOKEN_KEY),
   ]);
+}
+
+export async function getStoredPushToken() {
+  return getItem(PUSH_TOKEN_KEY);
+}
+
+export async function saveStoredPushToken(token: string) {
+  await setItem(PUSH_TOKEN_KEY, token);
+}
+
+export async function clearStoredPushToken() {
+  await deleteItem(PUSH_TOKEN_KEY);
 }

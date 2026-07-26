@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Linking, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { CareButton, Header, Screen } from '@/components/careon/shared';
@@ -8,10 +10,26 @@ import { replaceRoute } from '@/lib/navigation';
 import { useWear } from '@/lib/wear-state';
 
 export default function EmergencyScreen() {
-  const { acknowledgeEmergency, emergency } = useWear();
+  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { acknowledgeEmergency, emergency: activeEmergency, getEmergency } = useWear();
+  const [emergency, setEmergency] = useState(activeEmergency?.id === Number(eventId) ? activeEmergency : null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    const id = Number(eventId);
+    if (!Number.isInteger(id) || id <= 0) { setIsLoading(false); setLoadFailed(true); return; }
+    let cancelled = false;
+    void getEmergency(id).then((event) => {
+      if (!cancelled) { setEmergency(event); setLoadFailed(!event); }
+    }).catch(() => { if (!cancelled) setLoadFailed(true); }).finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [eventId, getEmergency]);
+
   const openMap = () => { if (emergency?.latitude != null && emergency.longitude != null) Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${emergency.latitude},${emergency.longitude}`); };
-  if (!emergency) return <Screen contentStyle={styles.empty}><Header onBack={() => replaceRoute('/wear')} style={styles.header} title="도움 요청" /><Text style={styles.emptyText}>확인할 도움 요청이 없어요.</Text></Screen>;
-  const acknowledge = async () => { await acknowledgeEmergency(); replaceRoute('/wear'); };
+  if (isLoading) return <Screen contentStyle={styles.empty}><Header onBack={() => replaceRoute('/wear')} style={styles.header} title="도움 요청" /><ActivityIndicator color={CAREON_COLORS.primaryDark} /></Screen>;
+  if (!emergency) return <Screen contentStyle={styles.empty}><Header onBack={() => replaceRoute('/wear')} style={styles.header} title="도움 요청" /><Text style={styles.emptyText}>{loadFailed ? '도움 요청 정보를 불러오지 못했어요.' : '확인할 도움 요청이 없어요.'}</Text></Screen>;
+  const acknowledge = async () => { await acknowledgeEmergency(emergency.id); setEmergency((current) => current ? { ...current, acknowledged: true } : current); replaceRoute('/wear'); };
   const requestedAt = formatKoreanDateTime(emergency.requestedAt);
   return <Screen scroll backgroundColor={CAREON_COLORS.page} contentStyle={styles.content}><Header onBack={() => replaceRoute('/wear')} style={styles.header} title="도움 요청" />
     <View style={styles.hero}><View style={styles.alertIcon}><Ionicons color={CAREON_COLORS.danger} name="alert" size={32} /></View><Text style={styles.title}>{emergency.acknowledged ? '확인했어요' : '도움 요청이 왔어요'}</Text><Text style={styles.description}>연결된 워치에서 도움을 요청했어요.</Text></View>

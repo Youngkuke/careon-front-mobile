@@ -21,7 +21,9 @@ type WearContextValue = {
   createPairingCode: () => Promise<void>;
   setLiveLocationTracking: (enabled: boolean) => Promise<void>;
   saveSafeZone: (zone: SafeZone) => Promise<void>;
-  acknowledgeEmergency: () => Promise<void>;
+  acknowledgeEmergency: (eventId?: number) => Promise<void>;
+  getEmergency: (eventId: number) => Promise<EmergencyEvent | null>;
+  getSafeZoneEvent: (eventId: number) => Promise<SafeZoneEvent | null>;
   refreshWearData: () => Promise<void>;
 };
 const WearContext = createContext<WearContextValue | null>(null);
@@ -101,12 +103,21 @@ export function WearProvider({ children }: PropsWithChildren) {
     const dto = await authenticatedRequest<SafeZoneDto>(`/api/app/cared/${cared.id}/safe-zone`, { body: { enabled: zone.enabled, latitude: zone.latitude, longitude: zone.longitude, name: zone.name, radius_meters: zone.radiusMeters }, method: 'PUT' });
     setSafeZone(toSafeZone(dto));
   }, [authenticatedRequest, cared]);
-  const acknowledgeEmergency = useCallback(async () => {
-    if (!emergency) return;
-    await authenticatedRequest(`/api/app/emergency-events/${emergency.id}/acknowledge`, { method: 'PATCH' });
-    setEmergency((current) => current ? { ...current, acknowledged: true } : null);
-  }, [authenticatedRequest, emergency]);
-  const value = useMemo(() => ({ pairingCode, pairingCodeExpiresAt, connected, cared, isLoading, safeZone, emergency, safeZoneEvent, liveLocation, liveLocationTrackingEnabled, createPairingCode, setLiveLocationTracking, saveSafeZone, acknowledgeEmergency, refreshWearData }), [acknowledgeEmergency, cared, connected, createPairingCode, emergency, isLoading, liveLocation, liveLocationTrackingEnabled, pairingCode, pairingCodeExpiresAt, refreshWearData, safeZone, safeZoneEvent, saveSafeZone, setLiveLocationTracking]);
+  const getEmergency = useCallback(async (eventId: number) => {
+    const dto = await authenticatedRequest<EmergencyDto | null>(`/api/app/emergency-events/${eventId}`);
+    return dto ? toEmergency(dto) : null;
+  }, [authenticatedRequest]);
+  const getSafeZoneEvent = useCallback(async (eventId: number) => {
+    const dto = await authenticatedRequest<SafeZoneEventDto | null>(`/api/app/safe-zone-events/${eventId}`);
+    return dto ? toSafeZoneEvent(dto) : null;
+  }, [authenticatedRequest]);
+  const acknowledgeEmergency = useCallback(async (eventId?: number) => {
+    const targetId = eventId ?? emergency?.id;
+    if (!targetId) return;
+    await authenticatedRequest(`/api/app/emergency-events/${targetId}/acknowledge`, { method: 'PATCH' });
+    setEmergency((current) => current?.id === targetId ? { ...current, acknowledged: true } : current);
+  }, [authenticatedRequest, emergency?.id]);
+  const value = useMemo(() => ({ pairingCode, pairingCodeExpiresAt, connected, cared, isLoading, safeZone, emergency, safeZoneEvent, liveLocation, liveLocationTrackingEnabled, createPairingCode, setLiveLocationTracking, saveSafeZone, acknowledgeEmergency, getEmergency, getSafeZoneEvent, refreshWearData }), [acknowledgeEmergency, cared, connected, createPairingCode, emergency, getEmergency, getSafeZoneEvent, isLoading, liveLocation, liveLocationTrackingEnabled, pairingCode, pairingCodeExpiresAt, refreshWearData, safeZone, safeZoneEvent, saveSafeZone, setLiveLocationTracking]);
   return <WearContext.Provider value={value}>{children}</WearContext.Provider>;
 }
 export function useWear() { const value = useContext(WearContext); if (!value) throw new Error('WearProvider가 필요합니다.'); return value; }

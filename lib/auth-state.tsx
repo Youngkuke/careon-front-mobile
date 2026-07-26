@@ -10,7 +10,7 @@ import {
   type UpdateUserPayload,
   type UserMeApiResponse,
 } from './api';
-import { clearStoredTokens, getStoredTokens, saveStoredTokens, type StoredTokens } from './token-storage';
+import { clearStoredPushToken, clearStoredTokens, getStoredPushToken, getStoredTokens, saveStoredTokens, type StoredTokens } from './token-storage';
 
 type AuthStatus = 'bootstrapping' | 'authenticated' | 'guest';
 
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setTokens(null);
     setUser(null);
     setStatus('guest');
-    await clearStoredTokens();
+    await Promise.all([clearStoredTokens(), clearStoredPushToken()]);
   }, []);
 
   const refreshTokens = useCallback((refreshToken: string) => {
@@ -98,6 +98,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     }
   }, [clearSession, refreshTokens]);
+
+  const unregisterPushToken = useCallback(async () => {
+    const pushToken = await getStoredPushToken();
+    if (!pushToken) return;
+    try {
+      await requestWithAuth('/api/app/users/me/push-tokens', {
+        body: { token: pushToken },
+        method: 'DELETE',
+      });
+    } finally {
+      await clearStoredPushToken();
+    }
+  }, [requestWithAuth]);
 
   const refreshMe = useCallback(async () => {
     const nextUser = await requestWithAuth<UserMeApiResponse>('/api/app/users/me');
@@ -171,6 +184,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     if (activeTokens?.accessToken) {
       try {
+        await unregisterPushToken();
         await requestWithAuth('/api/app/users/logout', { method: 'POST' });
       } catch {
         // Local logout should still succeed if the server session is already gone.
@@ -178,7 +192,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     await clearSession();
-  }, [clearSession, requestWithAuth]);
+  }, [clearSession, requestWithAuth, unregisterPushToken]);
 
   const updateMe = useCallback(async (payload: UpdateUserPayload) => {
     await requestWithAuth('/api/app/users/me', { body: toUpdateUserRequest(payload), method: 'PATCH' });
@@ -186,9 +200,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [refreshMe, requestWithAuth]);
 
   const deleteAccount = useCallback(async () => {
+    await unregisterPushToken();
     await requestWithAuth('/api/app/users/me', { method: 'DELETE' });
     await clearSession();
-  }, [clearSession, requestWithAuth]);
+  }, [clearSession, requestWithAuth, unregisterPushToken]);
 
   const value = useMemo<AuthContextValue>(() => ({
     authenticatedRequest: requestWithAuth,
