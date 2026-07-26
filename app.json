@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "CareOn",
+    "slug": "careon",
+    "owner": "melona0457s-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,9 +10,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "site.careon.mobile",
       "supportsTablet": true
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
+      "package": "site.careon.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -30,7 +34,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.webp",
+          "image": "./assets/images/logo.png",
           "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -39,11 +43,30 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#00C98D",
+          "defaultChannel": "emergency"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "CareOn이 안심 구역의 중심 위치를 설정하기 위해 현재 위치를 사용합니다."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "24abe3c4-0d44-4d40-8b62-2111838a925b"
+      },
+      "router": {}
     }
   }
 }
