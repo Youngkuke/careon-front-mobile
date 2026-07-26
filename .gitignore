@@ -45,3 +45,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+google-services.json
+careon-87818-firebase-adminsdk-fbsvc-e86b162889.json
