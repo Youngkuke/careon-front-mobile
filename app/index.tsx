@@ -13,7 +13,7 @@ export default function SplashScreen() {
   const logoWidth = Math.min(162, Math.max(130, width * 0.38));
   const backgroundColor = splashProgress.interpolate({
     inputRange: [0, 0.52, 1],
-    outputRange: [CAREON_COLORS.primary, '#EFFFF9', CAREON_COLORS.background],
+    outputRange: [CAREON_COLORS.primary, '#62E4BE', CAREON_COLORS.background],
   });
   const whiteLogoOpacity = splashProgress.interpolate({
     inputRange: [0, 0.36, 0.68],

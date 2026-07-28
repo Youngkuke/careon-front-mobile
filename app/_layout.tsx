@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { AppDataProvider } from '@/lib/app-data-state';
 import { AuthProvider } from '@/lib/auth-state';
 import { PushNotificationProvider } from '@/lib/push-notification-state';
+import { SaveFeedbackProvider } from '@/lib/save-feedback-state';
 import { WearProvider } from '@/lib/wear-state';
 
 export const unstable_settings = {
@@ -31,17 +32,19 @@ export default function RootLayout() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <AuthProvider>
           <PushNotificationProvider>
-            <AppDataProvider>
-              <WearProvider>
-                <Stack screenOptions={{ contentStyle: { backgroundColor: '#FFFFFF' }, headerShown: false }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="onboarding" />
-                  <Stack.Screen name="loading" />
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                </Stack>
-              </WearProvider>
-              <StatusBar style="dark" />
-            </AppDataProvider>
+            <SaveFeedbackProvider>
+              <AppDataProvider>
+                <WearProvider>
+                  <Stack screenOptions={{ contentStyle: { backgroundColor: '#FFFFFF' }, headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="onboarding" />
+                    <Stack.Screen name="loading" />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  </Stack>
+                </WearProvider>
+                <StatusBar style="dark" />
+              </AppDataProvider>
+            </SaveFeedbackProvider>
           </PushNotificationProvider>
         </AuthProvider>
       </SafeAreaProvider>
