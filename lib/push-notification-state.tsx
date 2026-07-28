@@ -5,7 +5,7 @@ import { PropsWithChildren, useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { useAuth } from './auth-state';
-import { clearStoredPushToken, getStoredPushToken, saveStoredPushToken } from './token-storage';
+import { saveStoredPushToken } from './token-storage';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,7 +26,7 @@ async function registerPushToken(
   await Notifications.setNotificationChannelAsync('emergency', {
     enableVibrate: true,
     importance: Notifications.AndroidImportance.MAX,
-    name: '긴급 도움 요청',
+    name: '긴급 알림 (SOS·안심 구역 이탈)',
     sound: 'default',
     vibrationPattern: [0, 300, 150, 300],
   });
@@ -57,42 +57,20 @@ async function registerPushToken(
   await saveStoredPushToken(token);
 }
 
-async function unregisterPushToken(
-  authenticatedRequest: ReturnType<typeof useAuth>['authenticatedRequest'],
-) {
-  const token = await getStoredPushToken();
-  if (!token) return;
-
-  try {
-    await authenticatedRequest('/api/app/users/me/push-tokens', {
-      body: { token },
-      method: 'DELETE',
-    });
-  } finally {
-    // Do not keep a token locally once the user has turned delivery off. A later opt-in will
-    // obtain and register a fresh Expo token.
-    await clearStoredPushToken();
-  }
-}
-
 function openNotificationTarget(notification: Notifications.Notification) {
   const url = notification.request.content.data?.url;
   if (typeof url === 'string' && url.startsWith('/')) router.push(url as never);
 }
 
 export function PushNotificationProvider({ children }: PropsWithChildren) {
-  const { authenticatedRequest, status, user } = useAuth();
+  const { authenticatedRequest, status } = useAuth();
 
   useEffect(() => {
     if (status !== 'authenticated' || Platform.OS !== 'android') return;
 
-    if (!user?.notificationEnabled) {
-      void unregisterPushToken(authenticatedRequest).catch((error) => {
-        console.warn('푸시 토큰 해제에 실패했어요.', error);
-      });
-      return;
-    }
-
+    // The notification setting governs policy/general notifications on the server. Keep this
+    // device token registered even when it is off so SOS and safe-zone emergency alerts can
+    // still be delivered, as explicitly communicated in the setting UI.
     void registerPushToken(authenticatedRequest).catch((error) => {
       console.warn('푸시 토큰 등록에 실패했어요.', error);
     });
@@ -115,7 +93,7 @@ export function PushNotificationProvider({ children }: PropsWithChildren) {
       responseSubscription.remove();
       tokenSubscription.remove();
     };
-  }, [authenticatedRequest, status, user?.notificationEnabled]);
+  }, [authenticatedRequest, status]);
 
   return children;
 }

@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { replaceRoute } from '@/lib/navigation';
+import { useSaveFeedback } from '@/lib/save-feedback-state';
 
 export default function ProfilePasswordScreen() {
   const { updateMe } = useAuth();
@@ -13,6 +14,7 @@ export default function ProfilePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
+  const { showSaved } = useSaveFeedback();
   const returnToMyPage = () => replaceRoute('/mypage');
   const handleSave = async () => {
     if (newPassword !== confirmPassword) {
@@ -24,6 +26,7 @@ export default function ProfilePasswordScreen() {
 
     try {
       await updateMe({ password: newPassword });
+      showSaved();
       returnToMyPage();
     } catch (error) {
       Alert.alert('저장 실패', error instanceof ApiError ? error.message : '비밀번호를 변경하지 못했어요.');

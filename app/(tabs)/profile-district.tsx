@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,17 +7,20 @@ import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { SEOUL_DISTRICTS } from '@/lib/mock-data';
 import { replaceRoute } from '@/lib/navigation';
+import { useSaveFeedback } from '@/lib/save-feedback-state';
 
 export default function ProfileDistrictScreen() {
   const { updateMe, user } = useAuth();
   const [district, setDistrict] = useState(user?.region ?? '');
   const [saving, setSaving] = useState(false);
+  const { showSaved } = useSaveFeedback();
   const returnToMyPage = () => replaceRoute('/mypage');
   const handleSave = async () => {
     setSaving(true);
 
     try {
       await updateMe({ region: district });
+      showSaved();
       returnToMyPage();
     } catch (error) {
       Alert.alert('저장 실패', error instanceof ApiError ? error.message : '거주지를 변경하지 못했어요.');
@@ -45,7 +47,6 @@ export default function ProfileDistrictScreen() {
                 pressed && styles.pressedChip,
               ]}>
               <Text style={[styles.chipText, selected && styles.selectedChipText]}>{item}</Text>
-              {selected ? <Ionicons color={CAREON_COLORS.background} name="checkmark" size={17} /> : null}
             </Pressable>
           );
         })}
