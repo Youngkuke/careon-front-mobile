@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
     backgroundColor: CAREON_COLORS.primary,
   },
   inactiveDot: {
-    backgroundColor: '#EDEDED',
+    backgroundColor: '#EBEBEB',
   },
 });

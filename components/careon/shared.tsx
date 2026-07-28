@@ -244,12 +244,13 @@ type CareButtonProps = PropsWithChildren<{
   disabled?: boolean;
   onPress?: () => void;
   textStyle?: StyleProp<TextStyle>;
-  variant?: 'primary' | 'white' | 'dangerText';
+  variant?: 'primary' | 'white' | 'danger' | 'dangerText';
   style?: StyleProp<ViewStyle>;
 }>;
 
 export function CareButton({ children, disabled, onPress, style, textStyle, variant = 'primary' }: CareButtonProps) {
   const isPrimary = variant === 'primary';
+  const isDangerFill = variant === 'danger';
   const isDanger = variant === 'dangerText';
 
   return (
@@ -259,7 +260,7 @@ export function CareButton({ children, disabled, onPress, style, textStyle, vari
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        isPrimary ? styles.primaryButton : styles.whiteButton,
+        isPrimary ? styles.primaryButton : isDangerFill ? styles.dangerButton : styles.whiteButton,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabledButton,
         style,
@@ -267,7 +268,7 @@ export function CareButton({ children, disabled, onPress, style, textStyle, vari
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
-        style={[styles.buttonText, isPrimary && styles.primaryButtonText, isDanger && styles.dangerButtonText, textStyle]}>
+        style={[styles.buttonText, (isPrimary || isDangerFill) && styles.primaryButtonText, isDanger && styles.dangerButtonText, textStyle]}>
         {children}
       </Text>
     </Pressable>
@@ -401,6 +402,9 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: CAREON_COLORS.primary,
   },
+  dangerButton: {
+    backgroundColor: CAREON_COLORS.danger,
+  },
   whiteButton: {
     backgroundColor: CAREON_COLORS.background,
     ...CAREON_SHADOW,
@@ -448,7 +452,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 36,
   },
   rowPressed: {
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#F6F6F6',
   },
   profileLabel: {
     color: CAREON_COLORS.title,

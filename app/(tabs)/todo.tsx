@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, LayoutChangeEvent, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useLocalSearchParams } from 'expo-router';
 
 import { CareEntrance, Screen, sharedStyles } from '@/components/careon/shared';
 import { ApiError } from '@/lib/api';
@@ -21,6 +22,7 @@ function splitDeadline(deadline: string) {
 
 export default function TodoScreen() {
   const { answerExpiredPolicy, refreshData, todoPrograms, toggleTodo } = useAppData();
+  const { programId } = useLocalSearchParams<{ programId?: string }>();
   const [answeringPolicyIds, setAnsweringPolicyIds] = useState<Record<number, boolean>>({});
   const [selectedSection, setSelectedSection] = useState<'remaining' | 'applied'>('remaining');
   const [tabLayouts, setTabLayouts] = useState<Record<'remaining' | 'applied', { width: number; x: number }>>({
@@ -30,7 +32,8 @@ export default function TodoScreen() {
   const selectedTabX = useSharedValue(0);
   const remainingPrograms = todoPrograms.filter((program) => !program.isApplied);
   const appliedPrograms = todoPrograms.filter((program) => program.isApplied);
-  const visiblePrograms = selectedSection === 'remaining' ? remainingPrograms : appliedPrograms;
+  const focusedProgramId = typeof programId === 'string' ? programId : undefined;
+  const visiblePrograms = [...(selectedSection === 'remaining' ? remainingPrograms : appliedPrograms)].sort((left, right) => Number(right.id === focusedProgramId) - Number(left.id === focusedProgramId));
   const totalDocuments = remainingPrograms.reduce((total, program) => total + program.documents.length, 0);
   const completedDocuments = remainingPrograms.reduce((total, program) => {
     return total + program.documents.filter((document) => document.isChecked).length;
@@ -45,6 +48,14 @@ export default function TodoScreen() {
       refreshData().catch(() => undefined);
     }, [refreshData]),
   );
+
+  useEffect(() => {
+    const focusedProgram = todoPrograms.find((item) => item.id === focusedProgramId);
+    if (!focusedProgram) return;
+    const section = focusedProgram.isApplied ? 'applied' : 'remaining';
+    setSelectedSection(section);
+    selectedTabX.value = withTiming(tabLayouts[section].x, { duration: 220 });
+  }, [focusedProgramId, selectedTabX, tabLayouts, todoPrograms]);
 
   const handleToggleTodo = async (todoId: number, isChecked: boolean) => {
     try {
@@ -231,7 +242,7 @@ export default function TodoScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
-    paddingTop: 30,
+    paddingTop: '4%',
   },
   header: {
     alignItems: 'center',
@@ -270,9 +281,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: CAREON_COLORS.title,
-    fontSize: 23,
+    fontSize: 24,
     fontWeight: '800',
-    lineHeight: 28,
+    lineHeight: 29,
   },
   progressBadge: {
     alignItems: 'center',

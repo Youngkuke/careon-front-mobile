@@ -5,6 +5,7 @@ import { Alert, KeyboardTypeOptions, Pressable, StyleSheet, TextInput, View } fr
 import { ApiError } from '@/lib/api';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { replaceRoute } from '@/lib/navigation';
+import { useSaveFeedback } from '@/lib/save-feedback-state';
 
 import { CareButton, Header, Screen } from './shared';
 
@@ -23,6 +24,7 @@ export function ProfileTextEditScreen({
   onSave,
   secureTextEntry,
 }: ProfileTextEditScreenProps) {
+  const { showSaved } = useSaveFeedback();
   const [value, setValue] = useState(initialValue);
   const [saving, setSaving] = useState(false);
   const returnToMyPage = () => replaceRoute('/mypage');
@@ -31,6 +33,7 @@ export function ProfileTextEditScreen({
 
     try {
       await onSave(value.trim());
+      showSaved();
       returnToMyPage();
     } catch (error) {
       Alert.alert('저장 실패', error instanceof ApiError ? error.message : '회원 정보를 수정하지 못했어요.');

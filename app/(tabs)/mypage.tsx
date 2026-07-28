@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Linking, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { CareButton, CareEntrance, Screen, sharedStyles } from '@/components/careon/shared';
 import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth-state';
 import { CAREON_COLORS, CAREON_SHADOW } from '@/lib/careon-theme';
 import { pushRoute, replaceRoute } from '@/lib/navigation';
+import { useSaveFeedback } from '@/lib/save-feedback-state';
 
 type SettingRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -38,8 +41,10 @@ function SettingRow({ icon, label, value, onPress, accessory }: SettingRowProps)
 }
 
 export default function MyPageScreen() {
-  const { deleteAccount, logout, updateMe, user } = useAuth();
+  const { deleteAccount, logout, refreshMe, updateMe, user } = useAuth();
   const [notificationEnabled, setNotificationEnabled] = useState(user?.notificationEnabled ?? false);
+  const [deviceNotificationDenied, setDeviceNotificationDenied] = useState(false);
+  const { showSaved } = useSaveFeedback();
   const displayName = user?.name ?? '';
   const displayEmail = user?.email ?? '';
   const displayRegion = user?.region ?? '';
@@ -48,14 +53,36 @@ export default function MyPageScreen() {
     setNotificationEnabled(user?.notificationEnabled ?? false);
   }, [user?.notificationEnabled]);
 
+  useFocusEffect(useCallback(() => {
+    void refreshMe().catch(() => undefined);
+  }, [refreshMe]));
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    let active = true;
+    void Notifications.getPermissionsAsync().then((permission) => {
+      if (active) setDeviceNotificationDenied(permission.status !== 'granted');
+    });
+    return () => { active = false; };
+  }, []);
+
   const handleNotificationChange = async (nextValue: boolean) => {
     setNotificationEnabled(nextValue);
 
     try {
       await updateMe({ notificationEnabled: nextValue });
+      showSaved();
     } catch (error) {
       setNotificationEnabled(!nextValue);
       Alert.alert('저장 실패', error instanceof ApiError ? error.message : '알림 설정을 저장하지 못했어요.');
+    }
+  };
+
+  const openNotificationSettings = async () => {
+    try {
+      await Linking.openSettings();
+    } catch {
+      Alert.alert('알림 설정', '기기 설정에서 CareOn의 알림을 허용해주세요.');
     }
   };
 
@@ -152,8 +179,9 @@ export default function MyPageScreen() {
               />
             }
             icon="notifications-outline"
-            label="알림 수신 설정"
+            label="정책·일반 알림 수신"
           />
+          {deviceNotificationDenied ? <Pressable accessibilityRole="button" onPress={() => void openNotificationSettings()} style={styles.permissionNotice}><Ionicons color={CAREON_COLORS.danger} name="warning-outline" size={17} /><Text style={styles.permissionText}>기기 알림이 꺼져 있어요. 설정에서 허용하기</Text><Ionicons color={CAREON_COLORS.faint} name="chevron-forward" size={18} /></Pressable> : null}
         </View>
       </CareEntrance>
 
@@ -174,13 +202,35 @@ export default function MyPageScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
-    paddingTop: 30,
+    paddingTop: '4%',
   },
   title: {
     color: CAREON_COLORS.title,
     fontSize: 24,
     fontWeight: '800',
     lineHeight: 29,
+  },
+  emergencyNotice: {
+    color: CAREON_COLORS.muted,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 18,
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+  },
+  permissionNotice: {
+    alignItems: 'center',
+    backgroundColor: '#F6F6F6',
+    flexDirection: 'row',
+    gap: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  permissionText: {
+    color: CAREON_COLORS.text,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
   },
   profileCard: {
     alignItems: 'center',
@@ -255,7 +305,7 @@ const styles = StyleSheet.create({
   },
   settingIcon: {
     alignItems: 'center',
-    backgroundColor: '#EEF8F5',
+    backgroundColor: '#EBEBEB',
     borderRadius: 15,
     height: 30,
     justifyContent: 'center',

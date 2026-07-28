@@ -54,6 +54,26 @@ function formatEventDday(event: CalendarEvent, today: Date) {
   return daysLeft > 0 ? `D-${daysLeft}` : `D+${Math.abs(daysLeft)}`;
 }
 
+function formatEventDate(event: CalendarEvent) {
+  return `${event.year}. ${event.monthIndex + 1}. ${event.day}.`;
+}
+
+function ScheduledEventCard({ event, title, today }: { event: CalendarEvent; title: string; today: Date }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const animate = (toValue: number) => Animated.spring(scale, { damping: 16, mass: 0.5, stiffness: 280, toValue, useNativeDriver: true }).start();
+
+  return <Animated.View style={{ transform: [{ scale }] }}><Pressable onPress={() => pushRoute(`/todo?programId=${event.programId}`)} onPressIn={() => animate(0.97)} onPressOut={() => animate(1)} style={styles.ddayCard}>
+    <View style={[styles.ddayColorBar, { backgroundColor: event.color }]} />
+    <View style={styles.ddayBody}>
+      <View style={styles.ddayTopRow}>
+        <Text style={[styles.ddayLabel, { color: event.color }]}>{event.type === 'deadline' ? '마감일' : '결과 발표일'} · {formatEventDate(event)}</Text>
+        <View style={[styles.ddayBadge, { borderColor: event.color }]}><Text style={[styles.ddayBadgeText, { color: event.color }]}>{formatEventDday(event, today)}</Text></View>
+      </View>
+      <Text numberOfLines={1} style={styles.ddayTitle}>{title}</Text>
+    </View>
+  </Pressable></Animated.View>;
+}
+
 function getCalendarCells(year: number, monthIndex: number, calendarEvents: CalendarEvent[]) {
   const firstDay = new Date(year, monthIndex, 1).getDay();
   const currentMonthDays = new Date(year, monthIndex + 1, 0).getDate();
@@ -206,11 +226,11 @@ export default function CalendarScreen() {
         ]}>
         <View style={[styles.monthRow, { marginBottom: monthMarginBottom }]}>
           <Pressable accessibilityLabel="이전 달" onPress={() => moveMonth(-1)} style={styles.monthCircle}>
-            <Ionicons color={CAREON_COLORS.background} name="chevron-back" size={21} />
+            <Ionicons color={CAREON_COLORS.title} name="chevron-back" size={21} />
           </Pressable>
           <Text style={styles.monthText}>{visibleMonth.year}. {visibleMonth.monthIndex + 1}</Text>
           <Pressable accessibilityLabel="다음 달" onPress={() => moveMonth(1)} style={styles.monthCircle}>
-            <Ionicons color={CAREON_COLORS.background} name="chevron-forward" size={21} />
+            <Ionicons color={CAREON_COLORS.title} name="chevron-forward" size={21} />
           </Pressable>
         </View>
 
@@ -303,20 +323,7 @@ export default function CalendarScreen() {
               return null;
             }
 
-            return (
-              <View key={event.id} style={styles.ddayCard}>
-                <View style={[styles.ddayColorBar, { backgroundColor: event.color }]} />
-                <View style={styles.ddayBody}>
-                  <View style={styles.ddayTopRow}>
-                    <Text style={[styles.ddayLabel, { color: event.color }]}>{event.type === 'deadline' ? '마감일' : '결과 발표일'} · {event.day}일</Text>
-                    <View style={[styles.ddayBadge, { borderColor: event.color }]}>
-                      <Text style={[styles.ddayBadgeText, { color: event.color }]}>{formatEventDday(event, today)}</Text>
-                    </View>
-                  </View>
-                  <Text numberOfLines={1} style={styles.ddayTitle}>{program.title}</Text>
-                </View>
-              </View>
-            );
+            return <ScheduledEventCard event={event} key={event.id} title={program.title} today={today} />;
           }) : (
             <View style={styles.emptyMonth}>
               <Text style={styles.emptyMonthText}>앞으로 예정된 일정이 없어요.</Text>
@@ -410,7 +417,7 @@ const styles = StyleSheet.create({
   },
   monthCircle: {
     alignItems: 'center',
-    backgroundColor: '#9EEBD6',
+    backgroundColor: '#EBEBEB',
     borderRadius: 15,
     height: 30,
     justifyContent: 'center',
@@ -457,7 +464,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   dateText: {
-    color: '#7B7B7B',
+    color: '#878787',
     fontSize: 16,
     fontWeight: '500',
   },

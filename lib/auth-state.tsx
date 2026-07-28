@@ -196,8 +196,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const updateMe = useCallback(async (payload: UpdateUserPayload) => {
     await requestWithAuth('/api/app/users/me', { body: toUpdateUserRequest(payload), method: 'PATCH' });
-    await refreshMe();
-  }, [refreshMe, requestWithAuth]);
+    setUser((current) => current ? { ...current, ...payload } : current);
+  }, [requestWithAuth]);
 
   const deleteAccount = useCallback(async () => {
     await unregisterPushToken();

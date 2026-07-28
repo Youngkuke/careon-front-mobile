@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   fallbackIcon: {
     alignItems: 'center',
-    backgroundColor: '#E9FBF6',
+    backgroundColor: '#EBEBEB',
     borderRadius: 17,
     height: 34,
     justifyContent: 'center',
