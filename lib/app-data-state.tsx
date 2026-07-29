@@ -35,7 +35,8 @@ export type CalendarEvent = {
 
 export type NotificationItem = {
   id: string;
-  policyId: number;
+  policyId: number | null;
+  servId: string | null;
   message: string;
   timestamp: string;
   daysLeft?: number;
@@ -175,6 +176,7 @@ function mapNotification(item: NotificationResponse): NotificationItem {
     kind: isResult ? 'result' : 'deadline',
     message,
     policyId: item.policy_id,
+    servId: item.serv_id,
     timestamp: item.relative_time,
   };
 }

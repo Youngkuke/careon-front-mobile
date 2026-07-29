@@ -72,7 +72,7 @@ function NotificationCard({
   delay?: number;
   item: NotificationItem;
   onDismiss: (id: string) => void;
-  onOpen: (policyId: number) => void;
+  onOpen: (policyId: number | null, servId: string | null) => void;
 }) {
   const iconKey = getIconKey(item);
   const entrance = useRef(new Animated.Value(0)).current;
@@ -137,7 +137,7 @@ function NotificationCard({
       ]}>
       <Pressable
         accessibilityRole="button"
-        onPress={() => onOpen(item.policyId)}
+        onPress={() => onOpen(item.policyId, item.servId)}
         style={({ pressed }) => [styles.itemPressable, pressed && styles.pressedItem]}>
         <NotificationIcon iconKey={iconKey} />
         <View style={styles.messageBlock}>
@@ -163,8 +163,9 @@ export default function NotificationsScreen() {
     });
   }, [loadNotifications]);
 
-  const handleOpenNotification = (policyId: number) => {
+  const handleOpenNotification = (policyId: number | null, servId: string | null) => {
     void policyId;
+    void servId;
     goBackOrReplace('/calendar');
   };
 
