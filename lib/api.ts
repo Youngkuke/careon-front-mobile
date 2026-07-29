@@ -40,7 +40,8 @@ export type UpdateUserPayload = Partial<{
 
 export type SavedPolicyResponse = {
   saved_policy_id: number;
-  policy_id: number;
+  policy_id: number | null;
+  serv_id: string | null;
   policy_name: string;
   application_deadline: string | null;
   application_deadline_d_day: string | null;
@@ -52,7 +53,8 @@ export type SavedPolicyResponse = {
 export type NotificationResponse = {
   notification_id: number;
   saved_policy_id: number;
-  policy_id: number;
+  policy_id: number | null;
+  serv_id: string | null;
   policy_name: string;
   notification_type: 'DEADLINE_D7' | 'DEADLINE_D3' | 'DEADLINE_D1' | 'RESULT_DDAY';
   sent_at: string;
@@ -62,7 +64,8 @@ export type NotificationResponse = {
 
 export type TodoPolicyResponse = {
   saved_policy_id: number;
-  policy_id: number;
+  policy_id: number | null;
+  serv_id: string | null;
   policy_name: string;
   application_deadline: string | null;
   link: string | null;
@@ -70,10 +73,12 @@ export type TodoPolicyResponse = {
   is_applied?: boolean;
   documents: Array<{
     todo_id: number;
-    document_id: number;
+    document_id: number | null;
     document_name: string;
+    document_url: string | null;
+    document_url_type: 'certificate_issuance' | 'form_download' | null;
     issuers: Array<{
-      document_issuer_id: number;
+      document_issuer_id: number | null;
       issuer_name: string;
       issuer_site: string | null;
     }>;
