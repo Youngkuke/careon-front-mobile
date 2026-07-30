@@ -34,9 +34,12 @@ export default function TodoScreen() {
   const appliedPrograms = todoPrograms.filter((program) => program.isApplied);
   const focusedProgramId = typeof programId === 'string' ? programId : undefined;
   const visiblePrograms = [...(selectedSection === 'remaining' ? remainingPrograms : appliedPrograms)].sort((left, right) => Number(right.id === focusedProgramId) - Number(left.id === focusedProgramId));
-  const totalDocuments = remainingPrograms.reduce((total, program) => total + program.documents.length, 0);
+  const totalDocuments = remainingPrograms.reduce(
+    (total, program) => total + program.documents.filter((document) => document.isCheckable).length,
+    0,
+  );
   const completedDocuments = remainingPrograms.reduce((total, program) => {
-    return total + program.documents.filter((document) => document.isChecked).length;
+    return total + program.documents.filter((document) => document.isCheckable && document.isChecked).length;
   }, 0);
   const selectedTabLayout = tabLayouts[selectedSection];
   const selectedTabStyle = useAnimatedStyle(() => ({
@@ -98,8 +101,8 @@ export default function TodoScreen() {
           <Text style={styles.title}>필요 서류 체크리스트</Text>
         </View>
         <View style={styles.progressBadge}>
-          <Text style={styles.progressValue}>{completedDocuments}/{totalDocuments}</Text>
-          <Text style={styles.progressLabel}>완료</Text>
+          <Text style={styles.progressValue}>{totalDocuments ? `${completedDocuments}/${totalDocuments}` : '—'}</Text>
+          <Text style={styles.progressLabel}>{totalDocuments ? '완료' : '서류 없음'}</Text>
         </View>
       </View>
 
@@ -132,7 +135,8 @@ export default function TodoScreen() {
 
       <View style={styles.sections}>
         {visiblePrograms.length ? visiblePrograms.map((program, programIndex) => {
-          const checkedCount = program.documents.filter((document) => document.isChecked).length;
+          const checkableDocuments = program.documents.filter((document) => document.isCheckable);
+          const checkedCount = checkableDocuments.filter((document) => document.isChecked).length;
           const deadline = splitDeadline(program.deadline);
 
           return (
@@ -146,7 +150,7 @@ export default function TodoScreen() {
                     </Text>
                   </View>
                   <Text style={styles.cardCount}>
-                    {program.isApplied ? '신청 완료' : program.isExpired ? '마감' : `${checkedCount}/${program.documents.length}`}
+                    {program.isApplied ? '신청 완료' : program.isExpired ? '마감' : checkableDocuments.length ? `${checkedCount}/${checkableDocuments.length}` : '제출 서류 없음'}
                   </Text>
                 </View>
 
@@ -191,26 +195,37 @@ export default function TodoScreen() {
                   <View style={styles.documentList}>
                     {program.documents.map((document) => {
                       const checked = document.isChecked;
+                      const content = (
+                        <>
+                          {document.isCheckable ? (
+                            <View style={[styles.checkbox, checked && styles.checkedBox]}>
+                              <Ionicons
+                                color={checked ? CAREON_COLORS.background : CAREON_COLORS.primary}
+                                name="checkmark"
+                                size={checked ? 17 : 15}
+                              />
+                            </View>
+                          ) : null}
+                          <View style={styles.checkText}>
+                            <Text style={[styles.checkTitle, document.isCheckable && checked && styles.checkedText]}>{document.title}</Text>
+                            <Text style={[styles.checkGuide, document.isCheckable && checked && styles.checkedGuide]}>{document.guide}</Text>
+                          </View>
+                        </>
+                      );
 
-                      return (
+                      return document.isCheckable ? (
                         <Pressable
                           accessibilityRole="checkbox"
                           accessibilityState={{ checked }}
                           key={document.todoId}
                           onPress={() => handleToggleTodo(document.todoId, !checked)}
                           style={({ pressed }) => [styles.checkLine, pressed && styles.pressedCheckLine]}>
-                          <View style={[styles.checkbox, checked && styles.checkedBox]}>
-                            <Ionicons
-                              color={checked ? CAREON_COLORS.background : CAREON_COLORS.primary}
-                              name="checkmark"
-                              size={checked ? 17 : 15}
-                            />
-                          </View>
-                          <View style={styles.checkText}>
-                            <Text style={[styles.checkTitle, checked && styles.checkedText]}>{document.title}</Text>
-                            <Text style={[styles.checkGuide, checked && styles.checkedGuide]}>{document.guide}</Text>
-                          </View>
+                          {content}
                         </Pressable>
+                      ) : (
+                        <View key={document.todoId} style={styles.checkLine}>
+                          {content}
+                        </View>
                       );
                     })}
                   </View>
