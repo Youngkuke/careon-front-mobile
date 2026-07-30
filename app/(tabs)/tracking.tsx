@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   map: { height: 274, width: '100%' },
   marker: { alignItems: 'center', backgroundColor: CAREON_COLORS.primaryDark, borderColor: CAREON_COLORS.background, borderRadius: 20, borderWidth: 3, height: 40, justifyContent: 'center', width: 40 },
   mapCaption: { alignItems: 'center', flexDirection: 'row', gap: 10, padding: 16 },
-  locateButton: { alignItems: 'center', backgroundColor: CAREON_COLORS.background, borderRadius: 28, bottom: 16, elevation: 5, height: 56, justifyContent: 'center', position: 'absolute', right: 16, shadowColor: '#444444', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 7, width: 56 },
+  locateButton: { alignItems: 'center', backgroundColor: CAREON_COLORS.background, borderRadius: 28, bottom: 16, elevation: 2.3, height: 56, justifyContent: 'center', position: 'absolute', right: 16, shadowColor: '#444444', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 7, width: 56 },
   locateButtonDisabled: { backgroundColor: '#EBEBEB', elevation: 0, shadowOpacity: 0 },
   captionIcon: { alignItems: 'center', backgroundColor: '#EBEBEB', borderRadius: 16, height: 36, justifyContent: 'center', width: 36 },
   captionTextWrap: { flex: 1 },
