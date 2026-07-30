@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   hint: { color: CAREON_COLORS.muted, fontSize: 12, fontWeight: '600', lineHeight: 18, marginTop: 4 },
   input: { borderBottomColor: CAREON_COLORS.line, borderBottomWidth: 1, color: CAREON_COLORS.text, fontSize: 16, fontWeight: '700', marginTop: 10, paddingVertical: 10 },
   mapHeader: { marginBottom: 13 },
-  locationButton: { alignItems: 'center', backgroundColor: CAREON_COLORS.background, borderRadius: 28, bottom: 16, elevation: 5, height: 56, justifyContent: 'center', position: 'absolute', right: 16, shadowColor: '#444444', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 7, width: 56 },
+  locationButton: { alignItems: 'center', backgroundColor: CAREON_COLORS.background, borderRadius: 28, bottom: 16, elevation: 2.3, height: 56, justifyContent: 'center', position: 'absolute', right: 16, shadowColor: '#444444', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 7, width: 56 },
   mapWrap: { borderRadius: 16, height: 248, overflow: 'hidden' },
   map: { height: '100%', width: '100%' },
   centerPin: { alignItems: 'center', justifyContent: 'center', left: '50%', marginLeft: -17, marginTop: -34, position: 'absolute', top: '50%' },
