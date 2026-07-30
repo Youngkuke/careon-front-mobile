@@ -18,7 +18,7 @@ export const CAREON_COLORS = {
   primaryDark: '#0BB985',
   primaryDeep: '#079269',
   danger: '#FF777B',
-  blue: '#24C898',
+  blue: '#4CACFF',
 };
 
 export const CAREON_SHADOW = Platform.select({
