@@ -84,6 +84,7 @@ export type TodoPolicyResponse = {
       issue_guide: string | null;
     }>;
     is_checked: boolean;
+    is_checkable: boolean;
   }>;
 };
 
