@@ -56,6 +56,7 @@ export type TodoProgram = {
     title: string;
     guide: string;
     isChecked: boolean;
+    isCheckable: boolean;
   }>;
 };
 
@@ -187,8 +188,9 @@ function mapTodoProgram(item: TodoPolicyResponse): TodoProgram {
     documents: item.documents.map((document) => ({
       guide: document.issuers.length
         ? document.issuers.map((issuer) => issuer.issue_guide ?? issuer.issuer_name).join(', ')
-        : '발급처 확인 필요',
+        : '신청 공고에서 서식 확인',
       isChecked: document.is_checked,
+      isCheckable: document.is_checkable,
       title: document.document_name,
       todoId: document.todo_id,
     })),
