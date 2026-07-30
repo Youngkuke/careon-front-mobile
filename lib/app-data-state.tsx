@@ -186,7 +186,7 @@ function mapTodoProgram(item: TodoPolicyResponse): TodoProgram {
     deadline: item.application_deadline ? formatDateLabel(item.application_deadline) : '일정 없음',
     documents: item.documents.map((document) => ({
       guide: document.issuers.length
-        ? document.issuers.map((issuer) => `${issuer.issuer_name}에서 발급 가능`).join(', ')
+        ? document.issuers.map((issuer) => issuer.issue_guide ?? issuer.issuer_name).join(', ')
         : '발급처 확인 필요',
       isChecked: document.is_checked,
       title: document.document_name,
