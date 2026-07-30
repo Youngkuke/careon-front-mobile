@@ -24,16 +24,16 @@ export const CAREON_COLORS = {
 export const CAREON_SHADOW = Platform.select({
   ios: {
     shadowColor: '#444444',
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
   android: {
-    elevation: 4,
+    elevation: 2,
   },
   default: {
     shadowColor: '#444444',
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.05,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },

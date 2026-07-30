@@ -78,6 +78,7 @@ type AppDataContextValue = {
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+export const ALWAYS_OPEN_LABEL = '상시·기타';
 
 function parseLocalDate(date: string) {
   const [year, month, day] = date.split('-').map(Number);
@@ -112,12 +113,12 @@ function mapSavedProgram(policy: SavedPolicyResponse, index: number): SavedProgr
     accentColor: policy.application_deadline ? CAREON_COLORS.danger : CAREON_COLORS.primary,
     agency: '',
     dday: policy.application_deadline_d_day ?? policy.result_date_d_day ?? '',
-    deadline: primaryDate ? formatDateLabel(primaryDate) : '상시',
+    deadline: primaryDate ? formatDateLabel(primaryDate) : ALWAYS_OPEN_LABEL,
     documents,
     id: makeProgramId(policy, index),
     isAlwaysOpen: !policy.application_deadline,
     schedule: {
-      date: primaryDate ? formatShortDate(primaryDate) : '상시',
+      date: primaryDate ? formatShortDate(primaryDate) : ALWAYS_OPEN_LABEL,
       detail: documents.length ? `필요 서류 | ${documents.map((item) => item.title).join(', ')}` : '필요 서류 없음',
     },
     title: policy.policy_name,
@@ -186,7 +187,7 @@ function mapNotification(item: NotificationResponse): NotificationItem {
 
 function mapTodoProgram(item: TodoPolicyResponse): TodoProgram {
   return {
-    deadline: item.application_deadline ? formatDateLabel(item.application_deadline) : '일정 없음',
+    deadline: item.application_deadline ? formatDateLabel(item.application_deadline) : ALWAYS_OPEN_LABEL,
     documents: item.documents.map((document) => ({
       guide: document.issuers.length
         ? document.issuers.map((issuer) => issuer.issue_guide ?? issuer.issuer_name).join(', ')

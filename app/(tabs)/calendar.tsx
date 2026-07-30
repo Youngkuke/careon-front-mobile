@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { CareEntrance, CareScrollView, Screen, sharedStyles } from '@/components/careon/shared';
-import { CalendarEvent, SavedProgram, useAppData } from '@/lib/app-data-state';
+import { ALWAYS_OPEN_LABEL, CalendarEvent, SavedProgram, useAppData } from '@/lib/app-data-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { pushRoute } from '@/lib/navigation';
 
@@ -83,8 +83,8 @@ function AlwaysOpenProgramCard({ program }: { program: SavedProgram }) {
     <View style={[styles.ddayColorBar, { backgroundColor: color }]} />
     <View style={styles.ddayBody}>
       <View style={styles.ddayTopRow}>
-        <Text style={[styles.ddayLabel, { color }]}>모집기간 · 상시</Text>
-        <View style={[styles.ddayBadge, { borderColor: color }]}><Text style={[styles.ddayBadgeText, { color }]}>상시</Text></View>
+        <Text style={[styles.ddayLabel, { color }]}>모집기간 · {ALWAYS_OPEN_LABEL}</Text>
+        <View style={[styles.ddayBadge, { borderColor: color }]}><Text style={[styles.ddayBadgeText, { color }]}>{ALWAYS_OPEN_LABEL}</Text></View>
       </View>
       <Text numberOfLines={1} style={styles.ddayTitle}>{program.title}</Text>
     </View>
@@ -130,7 +130,7 @@ export default function CalendarScreen() {
   const gridWidth = cellSize * 7;
   const scheduleListBottomPadding = 16;
   const calendarScale = height < 820 ? 0.88 : height < 900 ? 0.94 : 1;
-  const screenTopPadding = height < 820 ? 36 : 65;
+  const screenTopPadding = height < 820 ? 64 : 65;
   const calendarCardHeight = 50 + (313 * calendarScale);
   const calendarPaddingTop = 22 * calendarScale;
   const calendarPaddingBottom = 16 * calendarScale;
