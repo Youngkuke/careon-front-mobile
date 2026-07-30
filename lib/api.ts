@@ -81,6 +81,7 @@ export type TodoPolicyResponse = {
       document_issuer_id: number | null;
       issuer_name: string;
       issuer_site: string | null;
+      issue_guide: string | null;
     }>;
     is_checked: boolean;
   }>;
