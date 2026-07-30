@@ -11,6 +11,7 @@ export type SavedProgram = {
   deadline: string;
   dday: string;
   accentColor: string;
+  isAlwaysOpen: boolean;
   documents: Array<{
     title: string;
     guide: string;
@@ -108,14 +109,15 @@ function mapSavedProgram(policy: SavedPolicyResponse, index: number): SavedProgr
   }));
 
   return {
-    accentColor: policy.application_deadline ? CAREON_COLORS.danger : CAREON_COLORS.blue,
+    accentColor: policy.application_deadline ? CAREON_COLORS.danger : CAREON_COLORS.primary,
     agency: '',
     dday: policy.application_deadline_d_day ?? policy.result_date_d_day ?? '',
-    deadline: primaryDate ? formatDateLabel(primaryDate) : '일정 없음',
+    deadline: primaryDate ? formatDateLabel(primaryDate) : '상시',
     documents,
     id: makeProgramId(policy, index),
+    isAlwaysOpen: !policy.application_deadline,
     schedule: {
-      date: primaryDate ? formatShortDate(primaryDate) : '일정 없음',
+      date: primaryDate ? formatShortDate(primaryDate) : '상시',
       detail: documents.length ? `필요 서류 | ${documents.map((item) => item.title).join(', ')}` : '필요 서류 없음',
     },
     title: policy.policy_name,

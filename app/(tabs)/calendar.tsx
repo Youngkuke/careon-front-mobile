@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { CareEntrance, CareScrollView, Screen, sharedStyles } from '@/components/careon/shared';
-import { CalendarEvent, useAppData } from '@/lib/app-data-state';
+import { CalendarEvent, SavedProgram, useAppData } from '@/lib/app-data-state';
 import { CAREON_COLORS } from '@/lib/careon-theme';
 import { pushRoute } from '@/lib/navigation';
 
@@ -70,6 +70,23 @@ function ScheduledEventCard({ event, title, today }: { event: CalendarEvent; tit
         <View style={[styles.ddayBadge, { borderColor: event.color }]}><Text style={[styles.ddayBadgeText, { color: event.color }]}>{formatEventDday(event, today)}</Text></View>
       </View>
       <Text numberOfLines={1} style={styles.ddayTitle}>{title}</Text>
+    </View>
+  </Pressable></Animated.View>;
+}
+
+function AlwaysOpenProgramCard({ program }: { program: SavedProgram }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const animate = (toValue: number) => Animated.spring(scale, { damping: 16, mass: 0.5, stiffness: 280, toValue, useNativeDriver: true }).start();
+  const color = CAREON_COLORS.primary;
+
+  return <Animated.View style={{ transform: [{ scale }] }}><Pressable onPress={() => pushRoute(`/todo?programId=${program.id}`)} onPressIn={() => animate(0.97)} onPressOut={() => animate(1)} style={styles.ddayCard}>
+    <View style={[styles.ddayColorBar, { backgroundColor: color }]} />
+    <View style={styles.ddayBody}>
+      <View style={styles.ddayTopRow}>
+        <Text style={[styles.ddayLabel, { color }]}>모집기간 · 상시</Text>
+        <View style={[styles.ddayBadge, { borderColor: color }]}><Text style={[styles.ddayBadgeText, { color }]}>상시</Text></View>
+      </View>
+      <Text numberOfLines={1} style={styles.ddayTitle}>{program.title}</Text>
     </View>
   </Pressable></Animated.View>;
 }
@@ -137,6 +154,10 @@ export default function CalendarScreen() {
       .filter((event) => getEventDate(event) >= todayStart)
       .sort((a, b) => getEventDate(a).getTime() - getEventDate(b).getTime());
   }, [calendarEvents, today]);
+  const alwaysOpenPrograms = useMemo(
+    () => savedPrograms.filter((program) => program.isAlwaysOpen),
+    [savedPrograms],
+  );
   const selectedDateEvents = useMemo(() => {
     if (!selectedDate) {
       return [];
@@ -316,15 +337,22 @@ export default function CalendarScreen() {
         <CareScrollView
           contentContainerStyle={[styles.ddayList, { paddingBottom: scheduleListBottomPadding }]}
           showCareScrollbar={false}>
-          {upcomingEvents.length ? upcomingEvents.map((event) => {
-            const program = savedPrograms.find((item) => item.id === event.programId);
+          {upcomingEvents.length || alwaysOpenPrograms.length ? (
+            <>
+              {upcomingEvents.map((event) => {
+                const program = savedPrograms.find((item) => item.id === event.programId);
 
-            if (!program) {
-              return null;
-            }
+                if (!program) {
+                  return null;
+                }
 
-            return <ScheduledEventCard event={event} key={event.id} title={program.title} today={today} />;
-          }) : (
+                return <ScheduledEventCard event={event} key={event.id} title={program.title} today={today} />;
+              })}
+              {alwaysOpenPrograms.map((program) => (
+                <AlwaysOpenProgramCard key={`${program.id}-always-open`} program={program} />
+              ))}
+            </>
+          ) : (
             <View style={styles.emptyMonth}>
               <Text style={styles.emptyMonthText}>앞으로 예정된 일정이 없어요.</Text>
             </View>
